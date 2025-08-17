@@ -17,10 +17,6 @@ Minimal, JSON-only Flask 3.x backend with stub endpoints for image optimization,
    ```bash
    python run.py
    ```
-   Or with gunicorn:
-   ```bash
-   gunicorn --config gunicorn.conf.py "app:create_app()"
-   ```
 
 Service listens on http://localhost:8080
 
