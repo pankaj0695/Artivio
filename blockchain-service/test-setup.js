@@ -1,7 +1,7 @@
-import { ethers } from 'ethers';
-import axios from 'axios';
-import dotenv from 'dotenv';
-import { spawnSync } from 'child_process';
+const { ethers } = require('hardhat');
+const axios = require('axios');
+const dotenv = require('dotenv');
+const { spawnSync } = require('child_process');
 
 dotenv.config();
 

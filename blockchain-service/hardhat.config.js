@@ -1,10 +1,9 @@
-import "@nomiclabs/hardhat-ethers";
-import dotenv from "dotenv";
-dotenv.config();
+require("@nomiclabs/hardhat-ethers");
+require("dotenv").config();
 
 module.exports = {
   solidity: {
-    version: "0.8.19",
+    version: "0.8.28",
     settings: {
       optimizer: {
         enabled: true,
@@ -18,14 +17,14 @@ module.exports = {
       url: process.env.POLYGON_AMOY_RPC_URL,
       accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
       chainId: 80002,
-      gasPrice: 35000000000 // 35 gwei
+      // gasPrice: 35000000000 // 35 gwei
     },
     // Polygon Mainnet (for future use)
-    polygon: {
-      url: process.env.POLYGON_MAINNET_RPC_URL,
-      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
-      chainId: 137
-    }
+    // polygon: {
+    //   url: process.env.POLYGON_MAINNET_RPC_URL,
+    //   accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
+    //   chainId: 137
+    // }
   },
   etherscan: {
     apiKey: {
