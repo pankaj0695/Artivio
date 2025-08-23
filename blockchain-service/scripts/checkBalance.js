@@ -1,14 +1,15 @@
 // For development purposes only
 // This script checks the balance of a wallet on the Polygon Amoy Testnet
-import { ethers } from "ethers";
-import dotenv from "dotenv";
+const ethers = require('ethers');
+const dotenv = require('dotenv');
+
 dotenv.config();
 
 async function checkBalance() {
   const provider = new ethers.providers.JsonRpcProvider('https://rpc-amoy.polygon.technology');
   
   // Replace with your wallet address
-  const walletAddress = "YOUR_WALLET_ADDRESS_HERE";
+  const walletAddress = process.env.WALLET_ADDRESS;
   
   try {
     const balance = await provider.getBalance(walletAddress);

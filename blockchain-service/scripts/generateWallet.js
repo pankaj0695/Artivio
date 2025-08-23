@@ -1,7 +1,7 @@
 // For development purposes only
 // This script generates a new wallet for the Polygon Amoy Testnet
-import {ethers} from "ethers";
-import fs from "fs";
+const ethers = require('ethers');
+const fs = require('fs');
 
 function generateWallet() {
   // Generate a random wallet
