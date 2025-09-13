@@ -1,0 +1,59 @@
+// Firestore Security Rules for Artivio
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Users collection - users can read/write their own profile
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Products collection
+    match /products/{productId} {
+      // Anyone can read active products
+      allow read: if resource.data.status == 'active' || 
+                     (request.auth != null && request.auth.uid == resource.data.artisanId);
+      
+      // Only artisans can create/update their own products
+      allow create: if request.auth != null && 
+                      request.auth.uid == request.resource.data.artisanId &&
+                      isArtisan();
+      
+      allow update: if request.auth != null && 
+                      request.auth.uid == resource.data.artisanId &&
+                      isArtisan();
+      
+      // Only artisan can delete their products
+      allow delete: if request.auth != null && 
+                      request.auth.uid == resource.data.artisanId &&
+                      isArtisan();
+    }
+    
+    // Orders collection
+    match /orders/{orderId} {
+      // Users can read their own orders
+      allow read: if request.auth != null && 
+                     (request.auth.uid == resource.data.userId || 
+                      isArtisanForOrder(resource.data));
+      
+      // Users can create orders
+      allow create: if request.auth != null && 
+                      request.auth.uid == request.resource.data.userId;
+      
+      // Only system or order owner can update orders
+      allow update: if request.auth != null && 
+                      (request.auth.uid == resource.data.userId ||
+                       isArtisanForOrder(resource.data));
+    }
+    
+    // Helper function to check if user is artisan
+    function isArtisan() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'artisan';
+    }
+    
+    // Helper function to check if user is artisan for specific order
+    function isArtisanForOrder(orderData) {
+      // This would need more complex logic to check if user is artisan for products in order
+      return isArtisan();
+    }
+  }
+}

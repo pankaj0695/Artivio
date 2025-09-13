@@ -1,0 +1,24 @@
+// Firebase Storage Security Rules for Artivio
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Product images - only authenticated artisans can upload
+    match /products/{productId}/{allPaths=**} {
+      allow read: if true; // Anyone can read product images
+      allow write: if request.auth != null && 
+                      isArtisan() && 
+                      isValidImageFile();
+    }
+    
+    // Helper function to check if user is artisan
+    function isArtisan() {
+      return firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'artisan';
+    }
+    
+    // Helper function to validate image files
+    function isValidImageFile() {
+      return request.resource.size < 5 * 1024 * 1024 && // Max 5MB
+             request.resource.contentType.matches('image/.*');
+    }
+  }
+}

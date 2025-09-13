@@ -18,6 +18,7 @@ class Config:
 
     GOOGLE_PROJECT_ID: str | None = os.getenv("GOOGLE_PROJECT_ID")
     GOOGLE_LOCATION: str | None = os.getenv("GOOGLE_LOCATION")
+    GOOGLE_CREDENTIALS_JSON_BASE64: str | None = os.getenv("GOOGLE_CREDENTIALS_JSON_BASE64")
 
     VERTEX_TEXT_MODEL: str = os.getenv("VERTEX_TEXT_MODEL", "placeholder-text-model")
     VERTEX_IMAGE_MODEL: str = os.getenv("VERTEX_IMAGE_MODEL", "placeholder-image-model")
