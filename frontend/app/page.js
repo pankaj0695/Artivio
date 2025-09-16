@@ -1,43 +1,46 @@
-import Link from 'next/link';
-import Image from 'next/image';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { ArrowRight, Star, Users, Palette } from 'lucide-react';
+import Link from "next/link";
+import Image from "next/image";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { ArrowRight, Star, Users, Palette } from "lucide-react";
 
 export default function HomePage() {
   const featuredProducts = [
     {
       id: 1,
-      title: 'Handcrafted Ceramic Vase',
+      title: "Handcrafted Ceramic Vase",
       price: 2999,
-      image: 'https://images.pexels.com/photos/1047540/pexels-photo-1047540.jpeg',
-      artisan: 'Maya Ceramics',
-      rating: 4.8
+      image:
+        "https://images.pexels.com/photos/1047540/pexels-photo-1047540.jpeg",
+      artisan: "Maya Ceramics",
+      rating: 4.8,
     },
     {
       id: 2,
-      title: 'Woven Silk Scarf',
+      title: "Woven Silk Scarf",
       price: 1899,
-      image: 'https://images.pexels.com/photos/1040173/pexels-photo-1040173.jpeg',
-      artisan: 'Textile Traditions',
-      rating: 4.9
+      image:
+        "https://images.pexels.com/photos/1040173/pexels-photo-1040173.jpeg",
+      artisan: "Textile Traditions",
+      rating: 4.9,
     },
     {
       id: 3,
-      title: 'Brass Jewelry Set',
+      title: "Brass Jewelry Set",
       price: 3499,
-      image: 'https://images.pexels.com/photos/1191531/pexels-photo-1191531.jpeg',
-      artisan: 'Heritage Crafts',
-      rating: 4.7
-    }
+      image:
+        "https://images.pexels.com/photos/1191531/pexels-photo-1191531.jpeg",
+      artisan: "Heritage Crafts",
+      rating: 4.7,
+    },
   ];
 
   const categories = [
-    { name: 'Pottery', icon: '🏺', count: '120+ items' },
-    { name: 'Textiles', icon: '🧵', count: '85+ items' },
-    { name: 'Jewelry', icon: '💍', count: '95+ items' },
-    { name: 'Woodwork', icon: '🪵', count: '67+ items' }
+    { name: "Pottery", icon: "🏺", count: "120+ items" },
+    { name: "Textiles", icon: "🧵", count: "85+ items" },
+    { name: "Jewelry", icon: "💍", count: "95+ items" },
+    { name: "Woodwork", icon: "🪵", count: "67+ items" },
   ];
 
   return (
@@ -54,16 +57,18 @@ export default function HomePage() {
                 <h1 className="text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">
                   Discover
                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-blue-600">
-                    {' '}Artisan{' '}
+                    {" "}
+                    Artisan{" "}
                   </span>
                   Crafts
                 </h1>
                 <p className="text-xl text-gray-600 leading-relaxed">
-                  Connect with talented artisans and discover unique, handcrafted pieces. 
-                  Our AI-powered platform helps artisans showcase their work beautifully.
+                  Connect with talented artisans and discover unique,
+                  handcrafted pieces. Our AI-powered platform helps artisans
+                  showcase their work beautifully.
                 </p>
               </div>
-              
+
               <div className="flex flex-col sm:flex-row gap-4">
                 <Link href="/products">
                   <Button size="lg" className="rounded-full px-8 py-6 text-lg">
@@ -72,7 +77,11 @@ export default function HomePage() {
                   </Button>
                 </Link>
                 <Link href="/sign-up">
-                  <Button variant="outline" size="lg" className="rounded-full px-8 py-6 text-lg">
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    className="rounded-full px-8 py-6 text-lg"
+                  >
                     Become an Artisan
                   </Button>
                 </Link>
@@ -103,6 +112,7 @@ export default function HomePage() {
                         src="https://images.pexels.com/photos/1047540/pexels-photo-1047540.jpeg"
                         alt="Artisan craft"
                         fill
+                        sizes="(max-width: 1024px) 100vw, 25vw"
                         className="object-cover"
                       />
                     </div>
@@ -113,6 +123,7 @@ export default function HomePage() {
                         src="https://images.pexels.com/photos/1040173/pexels-photo-1040173.jpeg"
                         alt="Artisan craft"
                         fill
+                        sizes="(max-width: 1024px) 100vw, 25vw"
                         className="object-cover"
                       />
                     </div>
@@ -125,6 +136,7 @@ export default function HomePage() {
                         src="https://images.pexels.com/photos/1191531/pexels-photo-1191531.jpeg"
                         alt="Artisan craft"
                         fill
+                        sizes="(max-width: 1024px) 100vw, 25vw"
                         className="object-cover"
                       />
                     </div>
@@ -135,6 +147,7 @@ export default function HomePage() {
                         src="https://images.pexels.com/photos/1670977/pexels-photo-1670977.jpeg"
                         alt="Artisan craft"
                         fill
+                        sizes="(max-width: 1024px) 100vw, 25vw"
                         className="object-cover"
                       />
                     </div>
@@ -160,7 +173,10 @@ export default function HomePage() {
 
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
             {categories.map((category) => (
-              <Link key={category.name} href={`/products?category=${category.name.toLowerCase()}`}>
+              <Link
+                key={category.name}
+                href={`/products?category=${category.name.toLowerCase()}`}
+              >
                 <Card className="group hover:shadow-lg transition-all duration-300 rounded-2xl border-0 shadow-sm">
                   <CardContent className="p-8 text-center">
                     <div className="text-4xl mb-4">{category.icon}</div>
@@ -190,12 +206,16 @@ export default function HomePage() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {featuredProducts.map((product) => (
-              <Card key={product.id} className="group rounded-2xl border-0 shadow-sm hover:shadow-lg transition-all duration-300">
+              <Card
+                key={product.id}
+                className="group rounded-2xl border-0 shadow-sm hover:shadow-lg transition-all duration-300"
+              >
                 <div className="aspect-square relative overflow-hidden rounded-t-2xl">
                   <Image
                     src={product.image}
                     alt={product.title}
                     fill
+                    sizes="(max-width: 768px) 100vw, 33vw"
                     className="object-cover group-hover:scale-105 transition-transform duration-300"
                   />
                 </div>
@@ -206,12 +226,18 @@ export default function HomePage() {
                     </Badge>
                     <div className="flex items-center">
                       <Star className="h-4 w-4 fill-yellow-400 text-yellow-400 mr-1" />
-                      <span className="text-sm font-medium">{product.rating}</span>
+                      <span className="text-sm font-medium">
+                        {product.rating}
+                      </span>
                     </div>
                   </div>
-                  <h3 className="font-semibold text-lg mb-2">{product.title}</h3>
+                  <h3 className="font-semibold text-lg mb-2">
+                    {product.title}
+                  </h3>
                   <div className="flex items-center justify-between">
-                    <span className="text-2xl font-bold text-primary">₹{product.price}</span>
+                    <span className="text-2xl font-bold text-primary">
+                      ₹{product.price}
+                    </span>
                     <Button size="sm" className="rounded-full">
                       View Details
                     </Button>
@@ -246,18 +272,24 @@ export default function HomePage() {
               <div className="bg-purple-100 rounded-2xl p-6 w-16 h-16 mx-auto mb-6 flex items-center justify-center">
                 <Palette className="h-8 w-8 text-purple-600" />
               </div>
-              <h3 className="text-xl font-semibold mb-4">AI-Powered Discovery</h3>
+              <h3 className="text-xl font-semibold mb-4">
+                AI-Powered Discovery
+              </h3>
               <p className="text-gray-600">
-                Our AI helps artisans create compelling product descriptions, videos, and showcase their work beautifully.
+                Our AI helps artisans create compelling product descriptions,
+                videos, and showcase their work beautifully.
               </p>
             </div>
             <div className="text-center">
               <div className="bg-blue-100 rounded-2xl p-6 w-16 h-16 mx-auto mb-6 flex items-center justify-center">
                 <Users className="h-8 w-8 text-blue-600" />
               </div>
-              <h3 className="text-xl font-semibold mb-4">Direct from Artisans</h3>
+              <h3 className="text-xl font-semibold mb-4">
+                Direct from Artisans
+              </h3>
               <p className="text-gray-600">
-                Shop directly from skilled artisans and support traditional craftsmanship while getting authentic pieces.
+                Shop directly from skilled artisans and support traditional
+                craftsmanship while getting authentic pieces.
               </p>
             </div>
             <div className="text-center">
@@ -266,7 +298,8 @@ export default function HomePage() {
               </div>
               <h3 className="text-xl font-semibold mb-4">Quality Guaranteed</h3>
               <p className="text-gray-600">
-                Every product is carefully curated and quality-checked to ensure you get the best handcrafted items.
+                Every product is carefully curated and quality-checked to ensure
+                you get the best handcrafted items.
               </p>
             </div>
           </div>
