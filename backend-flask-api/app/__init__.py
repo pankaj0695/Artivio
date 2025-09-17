@@ -5,6 +5,7 @@ Loads config, registers blueprints, sets JSON-only error handling.
 from __future__ import annotations
 
 from flask import Flask, jsonify
+from flask_cors import CORS
 from .config import Config
 
 
@@ -16,6 +17,21 @@ def create_app() -> Flask:
     """
     app = Flask(__name__)
     app.config.from_object(Config())
+
+    # CORS: allow frontend app (env NEXT_PUBLIC_FRONTEND_ORIGIN or default localhost:3000)
+    frontend_origin = app.config.get("FRONTEND_ORIGIN") or "http://localhost:3000"
+    CORS(
+        app,
+        resources={r"/api/*": {"origins": [frontend_origin]}},
+        supports_credentials=True,
+        allow_headers=[
+            "Content-Type",
+            "Authorization",
+            "X-Requested-With",
+        ],
+        methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+        max_age=600,
+    )
 
     # Register blueprints
     from .routes.health import health_bp

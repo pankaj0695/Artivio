@@ -228,7 +228,7 @@ class VertexVideoService:
         import requests
 
         cloud_name = "dnfkcjujc"  # provided static values
-        upload_preset = "SkillSprint"
+        upload_preset = "Artivio"
         endpoint = f"https://api.cloudinary.com/v1_1/{cloud_name}/video/upload"
 
         files = {"file": (f"veo_{uuid.uuid4().hex[:10]}.mp4", video_bytes, "video/mp4")}
