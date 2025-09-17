@@ -1,21 +1,35 @@
 "use client";
 
-import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ImageUploader } from '@/components/ui/image-uploader';
-import { AIButton } from '@/components/ai/ai-button';
-import { createProduct, updateProduct } from '@/lib/firestore';
-import { useAuth } from '@/hooks/use-auth';
-import { useRouter } from 'next/navigation';
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ImageUploader } from "@/components/ui/image-uploader";
+import { AIButton } from "@/components/ai/ai-button";
+import { createProduct, updateProduct } from "@/lib/firestore";
+import { useAuth } from "@/hooks/use-auth";
+import { useRouter } from "next/navigation";
+import { Film, UploadCloud } from "lucide-react";
 
 const categories = [
-  'pottery', 'textiles', 'jewelry', 'woodwork', 'metalwork', 'painting', 'sculpture', 'other'
+  "pottery",
+  "textiles",
+  "jewelry",
+  "woodwork",
+  "metalwork",
+  "painting",
+  "sculpture",
+  "other",
 ];
 
 export function ProductForm({ product, isEdit = false }) {
@@ -24,110 +38,188 @@ export function ProductForm({ product, isEdit = false }) {
   const [loading, setLoading] = useState(false);
   const [aiLoading, setAiLoading] = useState({});
   const [images, setImages] = useState(product?.images || []);
+  const [videoGenerating, setVideoGenerating] = useState(false);
+  const [videoUploading, setVideoUploading] = useState(false);
 
   const {
     register,
     handleSubmit,
     setValue,
     watch,
-    formState: { errors }
+    formState: { errors },
   } = useForm({
     defaultValues: {
-      title: product?.title || '',
-      tagline: product?.tagline || '',
-      description: product?.description || '',
-      price: product?.price || '',
-      stock: product?.stock || '',
-      category: product?.category || '',
-      tags: product?.tags?.join(', ') || '',
-      videoUrl: product?.videoUrl || '',
-      status: product?.status || 'active'
-    }
+      title: product?.title || "",
+      tagline: product?.tagline || "",
+      description: product?.description || "",
+      price: product?.price || "",
+      stock: product?.stock || "",
+      category: product?.category || "",
+      tags: product?.tags?.join(", ") || "",
+      videoUrl: product?.videoUrl || "",
+      status: product?.status || "active",
+    },
   });
 
   const watchedFields = watch();
+  const videoPreviewUrl = watchedFields.videoUrl;
 
   const callAI = async (endpoint, data, field) => {
-    setAiLoading(prev => ({ ...prev, [field]: true }));
-    
+    setAiLoading((prev) => ({ ...prev, [field]: true }));
+
     try {
       const response = await fetch(`/api/ai/${endpoint}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
       });
-      
+
       const result = await response.json();
-      
+
       if (result.error) {
-        console.error('AI Error:', result.error);
+        console.error("AI Error:", result.error);
         return;
       }
-      
-      if (field === 'hashtags') {
-        setValue('tags', result.hashtags?.join(', ') || '');
+
+      if (field === "hashtags") {
+        setValue("tags", result.hashtags?.join(", ") || "");
       } else {
-        setValue(field, result[field] || '');
+        setValue(field, result[field] || "");
       }
     } catch (error) {
-      console.error('AI call failed:', error);
+      console.error("AI call failed:", error);
     } finally {
-      setAiLoading(prev => ({ ...prev, [field]: false }));
+      setAiLoading((prev) => ({ ...prev, [field]: false }));
     }
   };
 
-  const generateVideo = () => {
-    if (images.length < 3) {
-      alert('Please upload at least 3 images to generate a video');
+  const generateVideo = async () => {
+    if (images.length < 1) {
+      alert("Please upload at least 1 image before generating a video.");
       return;
     }
-    
-    callAI('video', {
-      image_urls: images.slice(0, 5),
-      duration_seconds: 10,
-      add_captions: true,
-      add_music: true,
-      preset: 'product_showcase'
-    }, 'videoUrl');
+    const buildVideosEndpoint = () => {
+      const rawBase = process.env.NEXT_PUBLIC_FLASK_API_BASE_URL || "";
+      if (!rawBase) return "/api/videos/generate";
+      const base = rawBase.replace(/\/$/, "");
+      const hasApi = /\/api(?:$|\/)/.test(base);
+      return hasApi ? `${base}/videos/generate` : `${base}/api/videos/generate`;
+    };
+    const endpoint = buildVideosEndpoint();
+    setVideoGenerating(true);
+    console.log(images[0]);
+    try {
+      const resp = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          image_url: images[0],
+        }),
+      });
+      const result = await resp.json();
+      console.log("Video generation response:", result);
+      if (!resp.ok) {
+        console.error("Video generation failed:", result);
+        alert(result?.message || "Failed to generate video.");
+        return;
+      }
+      if (result.status === "uploaded" && result.cloudinary_url) {
+        setValue("videoUrl", result.cloudinary_url, { shouldDirty: true });
+      } else if (result.status === "timeout") {
+        alert("Video generation is still running. Please try again later.");
+      } else if (result.status === "done_no_video") {
+        alert("Generation finished but no video bytes were returned.");
+      } else if (result.status === "error") {
+        alert(result.message || "Cloud upload failed.");
+      }
+    } catch (e) {
+      console.error("Video generate error:", e);
+      alert("An error occurred while generating the video.");
+    } finally {
+      setVideoGenerating(false);
+    }
+  };
+
+  const handleVideoUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setVideoUploading(true);
+    try {
+      const form = new FormData();
+      form.append("file", file);
+      form.append("upload_preset", "Artivio");
+      const cloudName = "dnfkcjujc";
+      const url = `https://api.cloudinary.com/v1_1/${cloudName}/video/upload`;
+      const r = await fetch(url, { method: "POST", body: form });
+      const data = await r.json();
+      if (data.secure_url) {
+        setValue("videoUrl", data.secure_url, { shouldDirty: true });
+      } else {
+        console.error("Cloudinary upload error:", data);
+        alert("Failed to upload video.");
+      }
+    } catch (err) {
+      console.error("Upload failed:", err);
+      alert("Video upload failed.");
+    } finally {
+      setVideoUploading(false);
+      // reset input value so same file can be selected again
+      e.target.value = "";
+    }
   };
 
   const generateDescription = () => {
-    callAI('description', {
-      product_name: watchedFields.title,
-      keywords: watchedFields.tags.split(',').map(tag => tag.trim()),
-      materials: '',
-      style: 'engaging',
-      story_depth: 'medium'
-    }, 'description');
+    callAI(
+      "description",
+      {
+        product_name: watchedFields.title,
+        keywords: watchedFields.tags.split(",").map((tag) => tag.trim()),
+        materials: "",
+        style: "engaging",
+        story_depth: "medium",
+      },
+      "description"
+    );
   };
 
   const generateTagline = () => {
-    callAI('tagline', {
-      product_name: watchedFields.title,
-      style: 'catchy'
-    }, 'tagline');
+    callAI(
+      "tagline",
+      {
+        product_name: watchedFields.title,
+        style: "catchy",
+      },
+      "tagline"
+    );
   };
 
   const generateHashtags = () => {
-    callAI('hashtags', {
-      product_name: watchedFields.title,
-      keywords: watchedFields.description.split(' ').slice(0, 10),
-      style: 'trending',
-      platforms: ['instagram', 'twitter']
-    }, 'hashtags');
+    callAI(
+      "hashtags",
+      {
+        product_name: watchedFields.title,
+        keywords: watchedFields.description.split(" ").slice(0, 10),
+        style: "trending",
+        platforms: ["instagram", "twitter"],
+      },
+      "hashtags"
+    );
   };
 
   const onSubmit = async (data) => {
     setLoading(true);
-    
+
     const productData = {
       ...data,
       artisanId: user.uid,
       price: parseFloat(data.price),
       stock: parseInt(data.stock),
-      tags: data.tags.split(',').map(tag => tag.trim()).filter(Boolean),
+      tags: data.tags
+        .split(",")
+        .map((tag) => tag.trim())
+        .filter(Boolean),
       images,
-      currency: 'INR'
+      currency: "INR",
     };
 
     try {
@@ -136,10 +228,10 @@ export function ProductForm({ product, isEdit = false }) {
       } else {
         await createProduct(productData);
       }
-      
-      router.push('/artisan/products');
+
+      router.push("/artisan/products");
     } catch (error) {
-      console.error('Error saving product:', error);
+      console.error("Error saving product:", error);
     } finally {
       setLoading(false);
     }
@@ -148,9 +240,7 @@ export function ProductForm({ product, isEdit = false }) {
   return (
     <Card className="max-w-4xl mx-auto">
       <CardHeader>
-        <CardTitle>
-          {isEdit ? 'Edit Product' : 'Add New Product'}
-        </CardTitle>
+        <CardTitle>{isEdit ? "Edit Product" : "Add New Product"}</CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -166,7 +256,7 @@ export function ProductForm({ product, isEdit = false }) {
               </div>
               <Input
                 id="title"
-                {...register('title', { required: 'Title is required' })}
+                {...register("title", { required: "Title is required" })}
                 error={errors.title?.message}
               />
             </div>
@@ -182,7 +272,7 @@ export function ProductForm({ product, isEdit = false }) {
               </div>
               <Input
                 id="tagline"
-                {...register('tagline')}
+                {...register("tagline")}
                 placeholder="A catchy tagline for your product"
               />
             </div>
@@ -199,7 +289,9 @@ export function ProductForm({ product, isEdit = false }) {
               <Textarea
                 id="description"
                 rows={4}
-                {...register('description', { required: 'Description is required' })}
+                {...register("description", {
+                  required: "Description is required",
+                })}
                 error={errors.description?.message}
               />
             </div>
@@ -211,7 +303,7 @@ export function ProductForm({ product, isEdit = false }) {
                   id="price"
                   type="number"
                   step="0.01"
-                  {...register('price', { required: 'Price is required' })}
+                  {...register("price", { required: "Price is required" })}
                   error={errors.price?.message}
                 />
               </div>
@@ -220,7 +312,7 @@ export function ProductForm({ product, isEdit = false }) {
                 <Input
                   id="stock"
                   type="number"
-                  {...register('stock', { required: 'Stock is required' })}
+                  {...register("stock", { required: "Stock is required" })}
                   error={errors.stock?.message}
                 />
               </div>
@@ -228,7 +320,7 @@ export function ProductForm({ product, isEdit = false }) {
 
             <div>
               <Label htmlFor="category">Category</Label>
-              <Select onValueChange={(value) => setValue('category', value)}>
+              <Select onValueChange={(value) => setValue("category", value)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select a category" />
                 </SelectTrigger>
@@ -253,39 +345,93 @@ export function ProductForm({ product, isEdit = false }) {
               </div>
               <Input
                 id="tags"
-                {...register('tags')}
+                {...register("tags")}
                 placeholder="handmade, pottery, ceramic"
               />
             </div>
 
             <div>
-              <Label>Product Images</Label>
+              <div className="flex items-center justify-between">
+                <Label>Product Images</Label>
+                <span className="text-xs text-red-600">
+                  Required for video generation
+                </span>
+              </div>
               <ImageUploader
-                productId={product?.id || 'new'}
+                productId={product?.id || "new"}
                 onImagesChange={setImages}
                 initialImages={images}
               />
+              {images.length === 0 && (
+                <p className="text-xs text-red-600 mt-1">
+                  Please upload at least one image.
+                </p>
+              )}
             </div>
 
             <div>
-              <div className="flex items-center gap-2 mb-2">
-                <Label htmlFor="videoUrl">Video URL</Label>
-                <AIButton
+              <div className="flex items-center gap-4 mb-2">
+                <Label htmlFor="videoUrl" className="mr-auto">
+                  Video
+                </Label>
+                <Button
+                  type="button"
+                  variant="outline"
                   onClick={generateVideo}
-                  loading={aiLoading.videoUrl}
-                  tooltip="Generate video from images with AI"
-                />
+                  disabled={videoGenerating || images.length === 0}
+                >
+                  <Film className="h-4 w-4 mr-2" />
+                  {videoGenerating ? "Generating…" : "Generate Video"}
+                </Button>
+                <div>
+                  <label
+                    className={`inline-flex items-center px-3 py-2 border rounded-md text-sm ${
+                      videoGenerating
+                        ? "opacity-50 cursor-not-allowed"
+                        : "cursor-pointer"
+                    }`}
+                  >
+                    <UploadCloud className="h-4 w-4 mr-2" /> Upload Video
+                    <input
+                      type="file"
+                      accept="video/*"
+                      className="hidden"
+                      onChange={handleVideoUpload}
+                      disabled={videoGenerating}
+                    />
+                  </label>
+                </div>
               </div>
               <Input
                 id="videoUrl"
-                {...register('videoUrl')}
+                {...register("videoUrl")}
                 placeholder="Optional video URL"
               />
+              {videoGenerating && (
+                <div className="mt-3">
+                  <div className="w-full h-48 rounded-lg bg-gray-200 animate-pulse" />
+                  <p className="text-sm text-gray-600 mt-2">
+                    Generating your video (about 1-2 minutes)…
+                  </p>
+                </div>
+              )}
+              {videoUploading && (
+                <p className="text-sm text-gray-600 mt-2">Uploading video…</p>
+              )}
+              {videoPreviewUrl && (
+                <div className="mt-3">
+                  <video
+                    className="w-full rounded-lg"
+                    src={videoPreviewUrl}
+                    controls
+                  />
+                </div>
+              )}
             </div>
 
             <div>
               <Label htmlFor="status">Status</Label>
-              <Select onValueChange={(value) => setValue('status', value)}>
+              <Select onValueChange={(value) => setValue("status", value)}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -299,11 +445,15 @@ export function ProductForm({ product, isEdit = false }) {
 
           <div className="flex gap-4">
             <Button type="submit" disabled={loading} className="flex-1">
-              {loading ? 'Saving...' : (isEdit ? 'Update Product' : 'Create Product')}
+              {loading
+                ? "Saving..."
+                : isEdit
+                ? "Update Product"
+                : "Create Product"}
             </Button>
-            <Button 
-              type="button" 
-              variant="outline" 
+            <Button
+              type="button"
+              variant="outline"
               onClick={() => router.back()}
             >
               Cancel

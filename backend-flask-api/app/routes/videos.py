@@ -21,7 +21,17 @@ def get_video_service() -> VertexVideoService:
 def generate_video():
     """Queue a product video generation job using Veo 3."""
     data = request.get_json(silent=True) or {}
-    image_url = data.get("image_url") or []
+    # Accept either a single `image_url` or an array `image_urls`
+    image_url = data.get("image_url")
+    if not image_url:
+        image_urls = data.get("image_urls") or []
+        if isinstance(image_urls, list) and image_urls:
+            image_url = image_urls[0]
+    if not image_url:
+        return jsonify({
+            "error": "BadRequest",
+            "message": "image_url is required (provide 'image_url' or first item in 'image_urls')",
+        }), 400
 
     try:
         svc = get_video_service()
@@ -39,7 +49,7 @@ def generate_video():
     job = svc.generate_sequence(
         image_url=image_url,
         duration_seconds=data.get("duration_seconds", 8),
-        add_captions=bool(data.get("add_captions", False)),
+        add_captions=bool(data.get("add_captions", True)),
         add_music=bool(data.get("add_music", True)),
         preset=data.get("preset", "reel"),
     )
