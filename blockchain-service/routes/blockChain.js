@@ -6,7 +6,6 @@ const DBService = require('../services/dbService');
 const firebaseConfig = require('../config/firebase');
 
 const router = express.Router();
-console.log("Private key: ", process.env.PRIVATE_KEY)
 // Initialize services
 const blockchainService = new BlockchainService(
   process.env.POLYGON_AMOY_RPC_URL, // Free testnet RPC
