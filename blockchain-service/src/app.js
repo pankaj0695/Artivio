@@ -21,20 +21,48 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }))
 app.use('/api/blockchain', blockchainRoutes);
 app.use('/api/ipfs', ipfsRoutes);
 
-// Health check
-app.get('/health', (req, res) => {
-  res.json({ status: 'OK', timestamp: new Date().toISOString() });
+// Health Check Endpoint
+app.get('/', (req, res) => {
+  res.json({
+    service: 'Artisan NFT Blockchain Service',
+    version: '1.0.0',
+    status: 'running',
+    network: 'Polygon Amoy Testnet',
+    contract: process.env.CONTRACT_ADDRESS,
+    timestamp: new Date().toISOString()
+  });
 });
 
-// Error handling
+// Error handling middleware
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ error: 'Something went wrong!' });
+  console.error('Server error:', err);
+  res.status(500).json({
+    error: 'Internal server error',
+    message: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong'
+  });
 });
 
-const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => {
-  console.log(`Blockchain service running on port ${PORT}`);
+// 404 handler
+app.use('*', (req, res) => {
+  res.status(404).json({
+    error: 'Endpoint not found',
+    availableEndpoints: [
+      'GET /',
+      'POST /api/mint-coa',
+      'POST /api/mint-rights',
+      'GET /api/verify/:tokenId',
+      'POST /api/upload-metadata'
+    ]
+  });
 });
+
+// Start server
+const PORT = process.env.PORT || 3001;
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 Blockchain Service Server running on port ${PORT}`);
+  console.log(`🌍 Environment: ${process.env.NODE_ENV}`);
+});
+
+
 
 module.exports = app;

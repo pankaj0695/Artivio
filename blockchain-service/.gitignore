@@ -1,5 +1,7 @@
 node_modules
 .env
+.env.production
+deployinfo.json
 
 # Hardhat files
 /cache
