@@ -41,6 +41,7 @@ export const updateProduct = async (productId, productData) => {
 };
 
 export const getProducts = async (filters = {}) => {
+  console.log("Fetching products with filters:", filters);
   try {
     let q = collection(db, "products");
 
@@ -178,5 +179,56 @@ export const getArtisanStats = async (artisanId) => {
     };
   } catch (error) {
     return { stats: null, error: error.message };
+  }
+};
+export const getArtisanOrders = async (artisanId, limitCount = 5) => {
+  try {
+    // 1. Get artisan products
+    const productsQuery = query(
+      collection(db, "products"),
+      where("artisanId", "==", artisanId)
+    );
+    const productsSnapshot = await getDocs(productsQuery);
+    const artisanProductIds = productsSnapshot.docs.map((doc) => doc.id);
+
+    if (artisanProductIds.length === 0) {
+      return { orders: [], error: null };
+    }
+
+    // 2. Get latest orders with limit
+    const ordersQuery = query(
+      collection(db, "orders"),
+      orderBy("createdAt", "desc"),
+      limit(limitCount)
+    );
+    const ordersSnapshot = await getDocs(ordersQuery);
+
+    // 3. Filter + attach buyer data
+    const artisanOrders = await Promise.all(
+      ordersSnapshot.docs.map(async (docSnap) => {
+        const order = { id: docSnap.id, ...docSnap.data() };
+
+        const hasArtisanProduct = order.items?.some((item) =>
+          artisanProductIds.includes(item.productId)
+        );
+
+        if (!hasArtisanProduct) return null;
+
+        // fetch buyer details
+        let buyer = null;
+        if (order.userId) {
+          const userDoc = await getDoc(doc(db, "users", order.userId));
+          if (userDoc.exists()) {
+            buyer = { id: userDoc.id, ...userDoc.data() };
+          }
+        }
+
+        return { ...order, buyer };
+      })
+    );
+
+    return { orders: artisanOrders.filter(Boolean), error: null };
+  } catch (error) {
+    return { orders: [], error: error.message };
   }
 };
