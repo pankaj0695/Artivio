@@ -28,8 +28,9 @@ export const signUpWithEmail = async (email, password, userData) => {
     await setDoc(doc(db, "users", result.user.uid), {
       name: userData.name,
       email: userData.email,
-      role: userData.role || 'customer',
-      addresses: [],  // Initialize with empty addresses
+      role: userData.role || "customer",
+      photoURL: null,
+      addresses: [], // Initialize with empty addresses
       createdAt: new Date(),
     });
 
