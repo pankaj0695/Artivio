@@ -29,6 +29,7 @@ export const signUpWithEmail = async (email, password, userData) => {
       name: userData.name,
       email: userData.email,
       role: userData.role || 'customer',
+      addresses: [],  // Initialize with empty addresses
       createdAt: new Date(),
     });
     
@@ -50,6 +51,7 @@ export const signInWithGoogle = async () => {
         name: result.user.displayName,
         email: result.user.email,
         role: 'customer',
+        addresses: [],  // Initialize with empty addresses
         createdAt: new Date(),
       });
     }

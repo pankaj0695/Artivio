@@ -15,6 +15,7 @@ export default function CartPage() {
   const { items, updateQuantity, removeItem, getTotalPrice, clearCart } = useCartStore();
 
   const handleCheckout = () => {
+    console.log(user);
     if (!user) {
       router.push('/sign-in');
       return;
