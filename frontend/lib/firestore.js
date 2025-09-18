@@ -117,8 +117,8 @@ export const getUserOrders = async (userId) => {
   try {
     const q = query(
       collection(db, "orders"),
-      where("userId", "==", userId),
-      orderBy("createdAt", "desc")
+      where("userId", "==", userId)
+      // orderBy("createdAt", "desc") // Uncomment if you have a composite index set up
     );
 
     const snapshot = await getDocs(q);
@@ -230,5 +230,25 @@ export const getArtisanOrders = async (artisanId, limitCount = 5) => {
     return { orders: artisanOrders.filter(Boolean), error: null };
   } catch (error) {
     return { orders: [], error: error.message };
+  }
+};
+
+export const getUserAddresses = async (userId) => {
+  try {
+    const userDoc = await getDoc(doc(db, "users", userId));
+    return userDoc.exists() ? userDoc.data().addresses || [] : [];
+  } catch (error) {
+    return [];
+  }
+};
+export const addUserAddress = async (userId, address) => {
+  try {
+    const userRef = doc(db, "users", userId);
+    const currentAddresses = await getUserAddresses(userId);
+    const updatedAddresses = [...currentAddresses, address];
+    await updateDoc(userRef, { addresses: updatedAddresses });
+    return { addresses: updatedAddresses, error: null };
+  } catch (error) {
+    return { addresses: null, error: error.message };
   }
 };

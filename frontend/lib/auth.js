@@ -30,6 +30,7 @@ export const signUpWithEmail = async (email, password, userData) => {
       email: userData.email,
       role: userData.role || "customer",
       photoURL: null,
+      addresses: [], // Initialize with empty addresses
       createdAt: new Date(),
     });
 
