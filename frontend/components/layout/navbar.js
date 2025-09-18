@@ -1,12 +1,13 @@
 "use client";
 
-import Link from 'next/link';
-import { useAuth } from '@/hooks/use-auth';
-import { useCartStore } from '@/lib/store';
-import { logout } from '@/lib/auth';
-import { Button } from '@/components/ui/button';
-import { ShoppingCart, User, LogOut, Palette } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import Link from "next/link";
+import { useAuth } from "@/hooks/use-auth";
+import { useCartStore } from "@/lib/store";
+import { logout } from "@/lib/auth";
+import { Button } from "@/components/ui/button";
+import { ShoppingCart, User, LogOut, Palette } from "lucide-react";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 export function Navbar() {
   const { user, profile } = useAuth();
@@ -15,7 +16,7 @@ export function Navbar() {
 
   const handleLogout = async () => {
     await logout();
-    router.push('/');
+    router.push("/");
   };
 
   return (
@@ -28,11 +29,17 @@ export function Navbar() {
           </Link>
 
           <div className="hidden md:flex items-center space-x-6">
-            <Link href="/products" className="text-gray-700 hover:text-primary transition-colors">
+            <Link
+              href="/products"
+              className="text-gray-700 hover:text-primary transition-colors"
+            >
               Products
             </Link>
-            {profile?.role === 'artisan' && (
-              <Link href="/artisan/dashboard" className="text-gray-700 hover:text-primary transition-colors">
+            {profile?.role === "artisan" && (
+              <Link
+                href="/artisan/dashboard"
+                className="text-gray-700 hover:text-primary transition-colors"
+              >
                 Dashboard
               </Link>
             )}
@@ -49,8 +56,21 @@ export function Navbar() {
                     </span>
                   )}
                 </Link>
-                <Link href="/profile">
-                  <User className="h-6 w-6 text-gray-700 hover:text-primary transition-colors" />
+                <Link
+                  href="/profile"
+                  className="h-8 w-8 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center"
+                >
+                  {profile?.photoURL ? (
+                    <Image
+                      src={profile.photoURL}
+                      alt="Profile"
+                      width={32}
+                      height={32}
+                      className="object-cover"
+                    />
+                  ) : (
+                    <User className="h-6 w-6 text-gray-700" />
+                  )}
                 </Link>
                 <Button variant="ghost" size="icon" onClick={handleLogout}>
                   <LogOut className="h-4 w-4" />

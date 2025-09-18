@@ -1,5 +1,5 @@
 const { ethers } = require('ethers');
-const contractABI = require('../../artifacts/contracts/ArtisanRights1155.sol/ArtisanRights1155.json');
+const contractABI = require('../artifacts/contracts/ArtisanRights1155.sol/ArtisanRights1155.json');
 
 class BlockchainService {
   constructor(rpcUrl, privateKey, contractAddress) {

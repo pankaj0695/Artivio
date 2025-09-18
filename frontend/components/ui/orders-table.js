@@ -35,6 +35,7 @@ export function OrdersTable({ orders }) {
                       }
                       alt={item.title}
                       fill
+                      sizes="64px"
                       className="object-cover"
                     />
                   </div>

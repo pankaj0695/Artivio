@@ -1,61 +1,72 @@
-"""Image-related endpoints (enhance, background replace, optimize)."""
-from __future__ import annotations
+import os
+import cv2
+import numpy as np
+import requests
+from flask import Blueprint, request, jsonify
 
-from flask import Blueprint, jsonify, request
+# Cloudinary config
+CLOUD_NAME = os.getenv("CLOUD_NAME")
+UPLOAD_PRESET = "Artivio"
+ENDPOINT = f"https://api.cloudinary.com/v1_1/{CLOUD_NAME}/image/upload"
 
-from ..services.vertex_image import VertexImageService
-
+# Blueprint
 images_bp = Blueprint("images", __name__)
-image_service = VertexImageService()
 
+def upscale_and_enhance(input_path, output_path, scale=2, steps=4, sharpen=True, sharpen_strength=1.0, denoise=True):
+    """
+    Upscale an image using bicubic interpolation with optional enhancement.
+    """
+    img = cv2.imread(input_path)
+    if img is None:
+        raise FileNotFoundError(f"❌ Image not found at {input_path}")
 
-@images_bp.post("/enhance")
+    # Progressive upscaling
+    for i in range(steps):
+        h, w = img.shape[:2]
+        img = cv2.resize(img, (w * scale, h * scale), interpolation=cv2.INTER_CUBIC)
+
+    # Denoise
+    if denoise:
+        img = cv2.fastNlMeansDenoisingColored(img, None, 10, 10, 7, 21)
+
+    # Sharpen
+    if sharpen:
+        kernel = np.array([[0, -1, 0],
+                           [-1, 4 + sharpen_strength, -1],
+                           [0, -1, 0]])
+        img = cv2.filter2D(img, -1, kernel)
+
+    cv2.imwrite(output_path, img)
+    return output_path
+
+@images_bp.route("/enhance-image", methods=["POST"])
 def enhance_image():
-    """Enhance image resolution / lighting (placeholder Vertex integration)."""
-    data = request.get_json(silent=True) or {}
-    source = data.get("image_url") or data.get("base64_image")
-    result = image_service.enhance(
-        source=source,
-        target_resolution=data.get("target_resolution"),
-        auto_lightning=bool(data.get("auto_lightning", True)),
-    )
-    return jsonify({
-        "request": {"target_resolution": data.get("target_resolution"), "auto_lightning": bool(data.get("auto_lightning", True))},
-        "output": result,
-        "todo": "Integrate actual Vertex Image super-resolution later",
-    })
+    """
+    API route: enhance and upscale an image, then upload to Cloudinary.
+    Expected JSON body:
+    {
+        "input_path": "/path/to/image.jpg"
+    }
+    """
+    try:
+        data = request.get_json()
+        input_path = data.get("input_path")
+        if not input_path or not os.path.exists(input_path):
+            return jsonify({"error": "Invalid or missing input_path"}), 400
 
+        output_path = "enhanced_output.jpg"
+        upscale_and_enhance(input_path, output_path, scale=2, steps=3, sharpen=True, sharpen_strength=1.2, denoise=True)
 
-@images_bp.post("/background")
-def replace_background():
-    """Replace/remove background (placeholder)."""
-    data = request.get_json(silent=True) or {}
-    source = data.get("image_url") or data.get("base64_image")
-    result = image_service.replace_background(
-        source=source,
-        background=data.get("background", "white"),
-        lifestyle_context=data.get("lifestyle_context"),
-    )
-    return jsonify({
-        "request": {"background": data.get("background", "white")},
-        "output": result,
-        "todo": "Add smart background selection + Vertex segmentation",
-    })
+        # Upload to Cloudinary
+        with open(output_path, "rb") as f:
+            files = {"file": f}
+            payload = {"upload_preset": UPLOAD_PRESET}
+            upload_res = requests.post(ENDPOINT, files=files, data=payload)
 
+        if upload_res.status_code != 200:
+            return jsonify({"error": "Cloudinary upload failed", "details": upload_res.text}), 500
 
-@images_bp.post("/optimize")
-def optimize_image():
-    """Low-end device optimization (compress / denoise / sharpen)."""
-    data = request.get_json(silent=True) or {}
-    source = data.get("image_url") or data.get("base64_image")
-    result = image_service.optimize(
-        source=source,
-        compress=bool(data.get("compress", True)),
-        denoise=bool(data.get("denoise", True)),
-        sharpen=bool(data.get("sharpen", True)),
-    )
-    return jsonify({
-        "request": {"compress": bool(data.get("compress", True)), "denoise": bool(data.get("denoise", True)), "sharpen": bool(data.get("sharpen", True))},
-        "output": result,
-        "todo": "Implement adaptive quality & size presets",
-    })
+        return jsonify(upload_res.json()), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
