@@ -13,7 +13,24 @@ import {
   startAfter,
 } from "firebase/firestore";
 import { db } from "./firebase";
+// Users
+export async function createUserProfile(uid, data) {
+  const userRef = doc(db, "users", uid);
+  await setDoc(userRef, data, { merge: true });
+  return data;
+}
 
+export async function getUserProfile(uid) {
+  const userRef = doc(db, "users", uid);
+  const snapshot = await getDoc(userRef);
+  return snapshot.exists() ? snapshot.data() : null;
+}
+
+export async function updateUserProfile(uid, data) {
+  const userRef = doc(db, "users", uid);
+  await updateDoc(userRef, data);
+  return data;
+}
 // Products
 export const createProduct = async (productData) => {
   try {
