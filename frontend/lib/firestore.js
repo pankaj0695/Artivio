@@ -4,6 +4,7 @@ import {
   getDocs,
   getDoc,
   addDoc,
+  setDoc,
   updateDoc,
   deleteDoc,
   query,
@@ -36,6 +37,7 @@ export const createProduct = async (productData) => {
   try {
     const docRef = await addDoc(collection(db, "products"), {
       ...productData,
+      type: productData?.type || "product",
       createdAt: new Date(),
       updatedAt: new Date(),
     });
@@ -49,6 +51,7 @@ export const updateProduct = async (productId, productData) => {
   try {
     await updateDoc(doc(db, "products", productId), {
       ...productData,
+      type: productData?.type || "product",
       updatedAt: new Date(),
     });
     return { error: null };
@@ -74,6 +77,10 @@ export const getProducts = async (filters = {}) => {
       q = query(q, where("artisanId", "==", filters.artisanId));
     }
 
+    if (filters.type) {
+      q = query(q, where("type", "==", filters.type));
+    }
+
     // client sorts by createdAt; avoid Firestore composite index
 
     if (filters.limit) {
@@ -81,10 +88,14 @@ export const getProducts = async (filters = {}) => {
     }
 
     const snapshot = await getDocs(q);
-    const products = snapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
+    const products = snapshot.docs.map((doc) => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        type: data?.type || "product",
+        ...data,
+      };
+    });
 
     return { products, error: null };
   } catch (error) {
@@ -96,8 +107,9 @@ export const getProduct = async (productId) => {
   try {
     const docSnapshot = await getDoc(doc(db, "products", productId));
     if (docSnapshot.exists()) {
+      const data = docSnapshot.data();
       return {
-        product: { id: docSnapshot.id, ...docSnapshot.data() },
+        product: { id: docSnapshot.id, type: data?.type || "product", ...data },
         error: null,
       };
     }
@@ -269,3 +281,61 @@ export const addUserAddress = async (userId, address) => {
     return { addresses: null, error: error.message };
   }
 };
+
+// ---------------- Artisan Public Profile (Public Collection) ----------------
+
+// Read public artisan profile
+export async function getArtisanPublic(uid) {
+  try {
+    const ref = doc(db, "artisanPublic", uid);
+    const snap = await getDoc(ref);
+    return snap.exists() ? { id: uid, ...snap.data() } : null;
+  } catch (error) {
+    console.error("getArtisanPublic error:", error);
+    return null;
+  }
+}
+
+// Create/update public artisan profile (creates collection/doc on first write)
+export async function upsertArtisanPublic(uid, data) {
+  try {
+    const ref = doc(db, "artisanPublic", uid);
+    const now = new Date();
+    await setDoc(
+      ref,
+      { ...data, updatedAt: now, createdAt: data?.createdAt || now },
+      { merge: true }
+    );
+    return { error: null };
+  } catch (error) {
+    return { error: error.message };
+  }
+}
+
+// Portfolio subcollection helpers
+export async function listPortfolio(uid, count = 12) {
+  try {
+    const ref = collection(db, "artisanPublic", uid, "portfolio");
+    const snap = await getDocs(query(ref, limit(count)));
+    return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  } catch (error) {
+    console.error("listPortfolio error:", error);
+    return [];
+  }
+}
+
+// List all public artisans (for directory)
+export async function listArtisans(count = 50) {
+  try {
+    const ref = collection(db, "artisanPublic");
+    let q = query(ref, orderBy("createdAt", "desc"));
+    if (count) {
+      q = query(q, limit(count));
+    }
+    const snap = await getDocs(q);
+    return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  } catch (error) {
+    console.error("listArtisans error:", error);
+    return [];
+  }
+}

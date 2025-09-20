@@ -5,16 +5,28 @@ import Image from "next/image";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ShoppingCart } from "lucide-react";
+import { ShoppingCart, Trash2 } from "lucide-react";
 import { useCartStore } from "@/lib/store";
+import { toast } from "sonner";
 
 export function ProductCard({ product }) {
+  const items = useCartStore((state) => state.items);
   const addItem = useCartStore((state) => state.addItem);
+  const removeItem = useCartStore((state) => state.removeItem);
 
-  const handleAddToCart = (e) => {
+  const isInCart = items.some((item) => item.id === product.id);
+  const isService = (product.type || "product") === "service";
+
+  const handleToggleCart = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    addItem(product);
+    if (isInCart) {
+      removeItem(product.id);
+      toast.error(`${product.title} removed from cart`);
+    } else {
+      addItem(product);
+      toast.success(`${product.title} added to cart`);
+    }
   };
 
   return (
@@ -31,7 +43,7 @@ export function ProductCard({ product }) {
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
             className="object-cover transition-transform duration-300 group-hover:scale-105"
           />
-          {product.stock < 10 && (
+          {!isService && product.stock < 10 && (
             <Badge className="absolute top-3 left-3 bg-red-500">
               Low Stock
             </Badge>
@@ -47,20 +59,28 @@ export function ProductCard({ product }) {
           </p>
           <div className="flex items-center justify-between">
             <div className="flex flex-col">
-              <span className="font-bold text-lg text-primary">
-                ₹{product.price}
-              </span>
-              <span className="text-xs text-gray-500">
-                Stock: {product.stock}
-              </span>
+              <span className="font-bold text-lg text-primary">₹{product.price}</span>
+              {!isService && (
+                <span className="text-xs text-gray-500">Stock: {product.stock}</span>
+              )}
             </div>
-            <Button
-              size="sm"
-              onClick={handleAddToCart}
-              className="rounded-full"
-            >
-              <ShoppingCart className="h-4 w-4" />
-            </Button>
+            {isService ? (
+              <Button size="sm" className="rounded-full">View</Button>
+            ) : (
+              <Button
+                size="sm"
+                onClick={handleToggleCart}
+                className="rounded-full"
+                variant={isInCart ? "destructive" : "default"}
+                disabled={product.stock === 0 && !isInCart}
+              >
+                {isInCart ? (
+                  <Trash2 className="h-4 w-4" />
+                ) : (
+                  <ShoppingCart className="h-4 w-4" />
+                )}
+              </Button>
+            )}
           </div>
         </div>
       </Link>

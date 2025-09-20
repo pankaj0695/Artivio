@@ -9,11 +9,14 @@ import { Badge } from "@/components/ui/badge";
 import { LoadingPage } from "@/components/ui/loading";
 import { useCartStore } from "@/lib/store";
 import { getProduct } from "@/lib/firestore";
-import { ShoppingCart, Star, Package, Truck } from "lucide-react";
+import { ShoppingCart, Star, Package, Truck, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 
 export default function ProductDetailPage() {
   const params = useParams();
+  const items = useCartStore((state) => state.items);
   const addItem = useCartStore((state) => state.addItem);
+  const removeItem = useCartStore((state) => state.removeItem);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["product", params.id],
@@ -24,9 +27,17 @@ export default function ProductDetailPage() {
   if (error || !data?.product) return <div>Product not found</div>;
 
   const product = data.product;
+  const isInCart = items.some((item) => item.id === product.id);
+  const isService = (product.type || "product") === "service";
 
-  const handleAddToCart = () => {
-    addItem(product);
+  const handleToggleCart = () => {
+    if (isInCart) {
+      removeItem(product.id);
+      toast.error(`${product.title} has been removed from your cart.`);
+    } else {
+      addItem(product);
+      toast.success(`${product.title} has been added to your cart.`);
+    }
   };
 
   return (
@@ -93,9 +104,11 @@ export default function ProductDetailPage() {
               <span className="text-3xl font-bold text-primary">
                 ₹{product.price}
               </span>
-              <Badge variant={product.stock > 10 ? "secondary" : "destructive"}>
-                {product.stock} in stock
-              </Badge>
+              {!isService && (
+                <Badge variant={product.stock > 10 ? "secondary" : "destructive"}>
+                  {product.stock} in stock
+                </Badge>
+              )}
             </div>
           </div>
 
@@ -116,15 +129,33 @@ export default function ProductDetailPage() {
           )}
 
           <div className="space-y-4">
-            <Button
-              onClick={handleAddToCart}
-              size="lg"
-              className="w-full rounded-full text-lg py-6"
-              disabled={product.stock === 0}
-            >
-              <ShoppingCart className="mr-2 h-5 w-5" />
-              Add to Cart
-            </Button>
+            {isService ? (
+              <Button
+                asChild
+                size="lg"
+                className="w-full rounded-full text-lg py-6"
+                disabled={!product.bookingUrl}
+              >
+                <a href={product.bookingUrl || "#"} target="_blank" rel="noreferrer">
+                  Book Appointment
+                </a>
+              </Button>
+            ) : (
+              <Button
+                onClick={handleToggleCart}
+                size="lg"
+                className="w-full rounded-full text-lg py-6"
+                disabled={product.stock === 0 && !isInCart}
+                variant={isInCart ? "destructive" : "default"}
+              >
+                {isInCart ? (
+                  <Trash2 className="mr-2 h-5 w-5" />
+                ) : (
+                  <ShoppingCart className="mr-2 h-5 w-5" />
+                )}
+                {isInCart ? "Remove from Cart" : "Add to Cart"}
+              </Button>
+            )}
 
             <div className="grid grid-cols-2 gap-4">
               <Card className="rounded-2xl">
