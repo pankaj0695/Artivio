@@ -115,7 +115,7 @@ function ProductsContent() {
                     {product.status}
                   </Badge>
                 </div>
-                {product.stock < 10 && (
+                {(product.type || "product") !== "service" && product.stock < 10 && (
                   <div className="absolute top-3 right-3">
                     <Badge className="bg-red-500">Low Stock</Badge>
                   </div>
@@ -133,9 +133,9 @@ function ProductsContent() {
                   <span className="font-bold text-lg text-primary">
                     ₹{product.price}
                   </span>
-                  <span className="text-sm text-gray-500">
-                    Stock: {product.stock}
-                  </span>
+                  {(product.type || "product") !== "service" && (
+                    <span className="text-sm text-gray-500">Stock: {product.stock}</span>
+                  )}
                 </div>
 
                 <div className="flex gap-2">

@@ -20,6 +20,7 @@ export default function ArtisanPublicProfilePage() {
   const [portfolio, setPortfolio] = useState([]);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [services, setServices] = useState([]);
 
   useEffect(() => {
     if (!uid) return;
@@ -28,8 +29,11 @@ export default function ArtisanPublicProfilePage() {
         const p = await getArtisanPublic(uid);
         setProfile(p);
         setPortfolio(await listPortfolio(uid));
-        const { products: prods } = await getProducts({ artisanId: uid, status: "active" });
-        setProducts(prods || []);
+  const { products: listings } = await getProducts({ artisanId: uid, status: "active" });
+  const prods = (listings || []).filter((p) => (p.type || "product") !== "service");
+  const servs = (listings || []).filter((p) => (p.type || "product") === "service");
+  setProducts(prods);
+  setServices(servs);
       } finally {
         setLoading(false);
       }
@@ -109,6 +113,31 @@ export default function ArtisanPublicProfilePage() {
                 <Link href={`/products/${p.id}`}>
                   <Button className="mt-2 w-full" variant="secondary">
                     <ShoppingCart className="mr-2 h-4 w-4" /> View
+                  </Button>
+                </Link>
+              </Card>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Services */}
+      {services?.length > 0 && (
+        <section>
+          <h2 className="font-semibold mb-3">Services</h2>
+          <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
+            {services.map((s) => (
+              <Card key={s.id} className="p-3">
+                {s.images?.[0] && (
+                  <div className="relative h-36 w-full mb-2">
+                    <Image src={s.images[0]} alt={s.title} fill className="rounded object-cover" />
+                  </div>
+                )}
+                <div className="font-medium">{s.title}</div>
+                <div className="text-sm">₹{s.price}</div>
+                <Link href={`/products/${s.id}`}>
+                  <Button className="mt-2 w-full" variant="secondary">
+                    View
                   </Button>
                 </Link>
               </Card>

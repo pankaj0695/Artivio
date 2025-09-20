@@ -40,7 +40,7 @@ export function Navbar() {
                 href={user?.uid ? `/artisan/${user.uid}` : "/artisan/profile"}
                 className="text-gray-700 hover:text-primary transition-colors"
               >
-                My Storefront
+                My Store
               </Link>
             ) : (
               <Link

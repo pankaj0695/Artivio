@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Input } from "@/components/ui/input";
 import {
@@ -30,6 +30,7 @@ export default function ProductsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [sortBy, setSortBy] = useState("newest");
+  const [listingType, setListingType] = useState("all"); // all | product | service
 
   const { data: productsData, isLoading } = useQuery({
     queryKey: ["products", selectedCategory],
@@ -42,6 +43,12 @@ export default function ProductsPage() {
 
   const filteredAndSortedProducts =
     productsData?.products
+      ?.filter((p) => {
+        const t = p.type || "product";
+        if (listingType === "all") return true;
+        if (listingType === "service") return t === "service";
+        return t !== "service"; // product
+      })
       ?.filter(
         (product) =>
           product.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -75,11 +82,11 @@ export default function ProductsPage() {
 
       {/* Filters */}
       <div className="bg-white rounded-2xl shadow-sm border p-6 mb-8">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
             <Input
-              placeholder="Search products..."
+              placeholder="Search listings..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10 rounded-full"
@@ -96,6 +103,17 @@ export default function ProductsPage() {
                   {category.label}
                 </SelectItem>
               ))}
+            </SelectContent>
+          </Select>
+
+          <Select onValueChange={setListingType} value={listingType}>
+            <SelectTrigger className="rounded-full">
+              <SelectValue placeholder="Listings" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Listings</SelectItem>
+              <SelectItem value="product">Products</SelectItem>
+              <SelectItem value="service">Services</SelectItem>
             </SelectContent>
           </Select>
 
@@ -117,7 +135,13 @@ export default function ProductsPage() {
         <p className="text-gray-600">
           {isLoading
             ? "Loading..."
-            : `${filteredAndSortedProducts.length} products found`}
+            : `${filteredAndSortedProducts.length} ${
+                listingType === "all"
+                  ? "listings"
+                  : listingType === "service"
+                  ? "services"
+                  : "products"
+              } found`}
         </p>
       </div>
 

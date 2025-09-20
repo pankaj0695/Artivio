@@ -37,6 +37,7 @@ export const createProduct = async (productData) => {
   try {
     const docRef = await addDoc(collection(db, "products"), {
       ...productData,
+      type: productData?.type || "product",
       createdAt: new Date(),
       updatedAt: new Date(),
     });
@@ -50,6 +51,7 @@ export const updateProduct = async (productId, productData) => {
   try {
     await updateDoc(doc(db, "products", productId), {
       ...productData,
+      type: productData?.type || "product",
       updatedAt: new Date(),
     });
     return { error: null };
@@ -75,6 +77,10 @@ export const getProducts = async (filters = {}) => {
       q = query(q, where("artisanId", "==", filters.artisanId));
     }
 
+    if (filters.type) {
+      q = query(q, where("type", "==", filters.type));
+    }
+
     // client sorts by createdAt; avoid Firestore composite index
 
     if (filters.limit) {
@@ -82,10 +88,14 @@ export const getProducts = async (filters = {}) => {
     }
 
     const snapshot = await getDocs(q);
-    const products = snapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
+    const products = snapshot.docs.map((doc) => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        type: data?.type || "product",
+        ...data,
+      };
+    });
 
     return { products, error: null };
   } catch (error) {
@@ -97,8 +107,9 @@ export const getProduct = async (productId) => {
   try {
     const docSnapshot = await getDoc(doc(db, "products", productId));
     if (docSnapshot.exists()) {
+      const data = docSnapshot.data();
       return {
-        product: { id: docSnapshot.id, ...docSnapshot.data() },
+        product: { id: docSnapshot.id, type: data?.type || "product", ...data },
         error: null,
       };
     }

@@ -54,14 +54,17 @@ export function ProductForm({ product, isEdit = false }) {
       description: product?.description || "",
       price: product?.price || "",
       stock: product?.stock || "",
+      type: product?.type || "product",
       category: product?.category || "",
       tags: product?.tags?.join(", ") || "",
       videoUrl: product?.videoUrl || "",
       status: product?.status || "active",
+      bookingUrl: product?.bookingUrl || "",
     },
   });
 
   const watchedFields = watch();
+  const listingType = watchedFields.type || "product";
   const videoPreviewUrl = watchedFields.videoUrl;
 
   const callAI = async (endpoint, data, field) => {
@@ -213,7 +216,9 @@ export function ProductForm({ product, isEdit = false }) {
       ...data,
       artisanId: user.uid,
       price: parseFloat(data.price),
-      stock: parseInt(data.stock),
+      // stock only relevant for physical products
+      stock: listingType === "service" ? 0 : parseInt(data.stock),
+      type: listingType,
       tags: data.tags
         .split(",")
         .map((tag) => tag.trim())
@@ -240,14 +245,31 @@ export function ProductForm({ product, isEdit = false }) {
   return (
     <Card className="max-w-4xl mx-auto">
       <CardHeader>
-        <CardTitle>{isEdit ? "Edit Product" : "Add New Product"}</CardTitle>
+        <CardTitle>
+          {isEdit ? (listingType === "service" ? "Edit Service" : "Edit Product") : listingType === "service" ? "Add New Service" : "Add New Product"}
+        </CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <div className="space-y-4">
             <div>
+              <Label htmlFor="type">Listing Type</Label>
+              <Select
+                onValueChange={(value) => setValue("type", value, { shouldDirty: true })}
+                defaultValue={listingType}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="product">Product</SelectItem>
+                  <SelectItem value="service">Service</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
               <div className="flex items-center gap-2 mb-2">
-                <Label htmlFor="title">Product Title</Label>
+                <Label htmlFor="title">{listingType === "service" ? "Service Title" : "Product Title"}</Label>
                 <AIButton
                   onClick={generateTagline}
                   loading={aiLoading.tagline}
@@ -261,21 +283,23 @@ export function ProductForm({ product, isEdit = false }) {
               />
             </div>
 
-            <div>
-              <div className="flex items-center gap-2 mb-2">
-                <Label htmlFor="tagline">Tagline</Label>
-                <AIButton
-                  onClick={generateTagline}
-                  loading={aiLoading.tagline}
-                  tooltip="Generate tagline with AI"
+            {listingType !== "service" && (
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <Label htmlFor="tagline">Tagline</Label>
+                  <AIButton
+                    onClick={generateTagline}
+                    loading={aiLoading.tagline}
+                    tooltip="Generate tagline with AI"
+                  />
+                </div>
+                <Input
+                  id="tagline"
+                  {...register("tagline")}
+                  placeholder="A catchy tagline for your product"
                 />
               </div>
-              <Input
-                id="tagline"
-                {...register("tagline")}
-                placeholder="A catchy tagline for your product"
-              />
-            </div>
+            )}
 
             <div>
               <div className="flex items-center gap-2 mb-2">
@@ -307,68 +331,75 @@ export function ProductForm({ product, isEdit = false }) {
                   error={errors.price?.message}
                 />
               </div>
+              {listingType !== "service" && (
+                <div>
+                  <Label htmlFor="stock">Stock Quantity</Label>
+                  <Input
+                    id="stock"
+                    type="number"
+                    {...register("stock", { required: "Stock is required" })}
+                    error={errors.stock?.message}
+                  />
+                </div>
+              )}
+            </div>
+
+            {listingType !== "service" && (
               <div>
-                <Label htmlFor="stock">Stock Quantity</Label>
+                <Label htmlFor="category">Category</Label>
+                <Select onValueChange={(value) => setValue("category", value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((category) => (
+                      <SelectItem key={category} value={category}>
+                        {category.charAt(0).toUpperCase() + category.slice(1)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {listingType !== "service" && (
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <Label htmlFor="tags">Tags (comma-separated)</Label>
+                  <AIButton
+                    onClick={generateHashtags}
+                    loading={aiLoading.hashtags}
+                    tooltip="Generate hashtags with AI"
+                  />
+                </div>
                 <Input
-                  id="stock"
-                  type="number"
-                  {...register("stock", { required: "Stock is required" })}
-                  error={errors.stock?.message}
+                  id="tags"
+                  {...register("tags")}
+                  placeholder="handmade, pottery, ceramic"
                 />
               </div>
-            </div>
-
-            <div>
-              <Label htmlFor="category">Category</Label>
-              <Select onValueChange={(value) => setValue("category", value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map((category) => (
-                    <SelectItem key={category} value={category}>
-                      {category.charAt(0).toUpperCase() + category.slice(1)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <div className="flex items-center gap-2 mb-2">
-                <Label htmlFor="tags">Tags (comma-separated)</Label>
-                <AIButton
-                  onClick={generateHashtags}
-                  loading={aiLoading.hashtags}
-                  tooltip="Generate hashtags with AI"
-                />
-              </div>
-              <Input
-                id="tags"
-                {...register("tags")}
-                placeholder="handmade, pottery, ceramic"
-              />
-            </div>
+            )}
 
             <div>
               <div className="flex items-center justify-between">
-                <Label>Product Images</Label>
-                <span className="text-xs text-red-600">
-                  Required for video generation
-                </span>
+                <Label>{listingType === "service" ? "Images (optional)" : "Product Images"}</Label>
+                {listingType !== "service" && (
+                  <span className="text-xs text-red-600">Required for video generation</span>
+                )}
               </div>
               <ImageUploader
                 productId={product?.id || "new"}
                 onImagesChange={setImages}
                 initialImages={images}
               />
-              {images.length === 0 && (
+              {listingType !== "service" && images.length === 0 && (
                 <p className="text-xs text-red-600 mt-1">
                   Please upload at least one image.
                 </p>
               )}
             </div>
 
+            {listingType !== "service" && (
             <div>
               <div className="flex items-center gap-4 mb-2">
                 <Label htmlFor="videoUrl" className="mr-auto">
@@ -428,6 +459,21 @@ export function ProductForm({ product, isEdit = false }) {
                 </div>
               )}
             </div>
+            )}
+
+            {listingType === "service" && (
+              <div>
+                <Label htmlFor="bookingUrl">Booking/Contact URL</Label>
+                <Input
+                  id="bookingUrl"
+                  {...register("bookingUrl", { required: "Booking URL is required for services" })}
+                  placeholder="https://wa.me/91XXXXXXXXXX or Calendly link"
+                />
+                {errors.bookingUrl?.message && (
+                  <p className="text-xs text-red-600 mt-1">{errors.bookingUrl.message}</p>
+                )}
+              </div>
+            )}
 
             <div>
               <Label htmlFor="status">Status</Label>
@@ -448,8 +494,8 @@ export function ProductForm({ product, isEdit = false }) {
               {loading
                 ? "Saving..."
                 : isEdit
-                ? "Update Product"
-                : "Create Product"}
+                ? listingType === "service" ? "Update Service" : "Update Product"
+                : listingType === "service" ? "Create Service" : "Create Product"}
             </Button>
             <Button
               type="button"
