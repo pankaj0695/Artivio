@@ -5,16 +5,27 @@ import Image from "next/image";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ShoppingCart } from "lucide-react";
+import { ShoppingCart, Trash2 } from "lucide-react";
 import { useCartStore } from "@/lib/store";
+import { toast } from "sonner";
 
 export function ProductCard({ product }) {
+  const items = useCartStore((state) => state.items);
   const addItem = useCartStore((state) => state.addItem);
+  const removeItem = useCartStore((state) => state.removeItem);
 
-  const handleAddToCart = (e) => {
+  const isInCart = items.some((item) => item.id === product.id);
+
+  const handleToggleCart = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    addItem(product);
+    if (isInCart) {
+      removeItem(product.id);
+      toast.error(`${product.title} removed from cart`);
+    } else {
+      addItem(product);
+      toast.success(`${product.title} added to cart`);
+    }
   };
 
   return (
@@ -56,10 +67,16 @@ export function ProductCard({ product }) {
             </div>
             <Button
               size="sm"
-              onClick={handleAddToCart}
+              onClick={handleToggleCart}
               className="rounded-full"
+              variant={isInCart ? "destructive" : "default"}
+              disabled={product.stock === 0 && !isInCart}
             >
-              <ShoppingCart className="h-4 w-4" />
+              {isInCart ? (
+                <Trash2 className="h-4 w-4" />
+              ) : (
+                <ShoppingCart className="h-4 w-4" />
+              )}
             </Button>
           </div>
         </div>
