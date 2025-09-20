@@ -18,17 +18,18 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { AIButton } from "@/components/ai/ai-button";
 import { getGeminiAnalysis } from "@/lib/gemini";
+import { ArrowLeft } from "lucide-react";
+
 function RevenueOrdersChart({ orders }) {
-  const [metric, setMetric] = useState("revenue"); // dropdown still controls graph
-  const [duration, setDuration] = useState("15"); 
+  const [metric, setMetric] = useState("revenue");
+  const [duration, setDuration] = useState("15");
   const [showAnalysis, setShowAnalysis] = useState(false);
   const [loading, setLoading] = useState(false);
   const [analysis, setAnalysis] = useState("");
 
-  // Group orders by day
+  // Group and sort orders by day
   const chartData = useMemo(() => {
     if (!orders) return [];
 
@@ -38,13 +39,19 @@ function RevenueOrdersChart({ orders }) {
       const date = order.createdAt.toDate
         ? order.createdAt.toDate()
         : new Date(order.createdAt);
+
       const day = date.toLocaleDateString("en-IN", {
         day: "numeric",
         month: "short",
       });
 
       if (!map.has(day)) {
-        map.set(day, { date: day, revenue: 0, orders: 0 });
+        map.set(day, {
+          date: day,
+          revenue: 0,
+          orders: 0,
+          actualDate: date,
+        });
       }
       const entry = map.get(day);
       entry.revenue += order.amount || 0;
@@ -53,28 +60,30 @@ function RevenueOrdersChart({ orders }) {
 
     let dataArr = Array.from(map.values());
 
+    // ✅ Ensure oldest → newest so latest is at right
+    dataArr.sort((a, b) => a.actualDate - b.actualDate);
+
     return dataArr.slice(-Number(duration));
   }, [orders, duration]);
 
-  // Gemini API call for combined analysis
+  // Gemini API call
   const fetchAnalysis = async () => {
     setLoading(true);
     try {
       const prompt = `
         Analyze the following business data for the last ${duration} days.
         Data includes both revenue and orders by date.
-        Provide insights about:
-        1. Revenue trends
-        2. Orders trends
-        3. Any correlation between them
-        4. Highlight spikes or drops
+        Provide clear, short, and simple insights under 200 words.
+        Avoid bold formatting or markdown symbols.
+        Focus only on explaining trends, spikes, drops, and correlation
+        in easy language suitable for direct website display.
         
         Data: ${JSON.stringify(chartData)}
       `;
 
       const response = await getGeminiAnalysis(prompt);
-    setAnalysis(response);
-    setShowAnalysis(true);
+      setAnalysis(response);
+      setShowAnalysis(true);
     } catch (err) {
       setAnalysis("Error fetching analysis.");
       setShowAnalysis(true);
@@ -114,18 +123,29 @@ function RevenueOrdersChart({ orders }) {
           <AIButton
             onClick={fetchAnalysis}
             loading={loading}
-            tooltip="Get AI Analysis"
+            tooltip="Explain with AI"
           />
         </div>
       </CardHeader>
 
       <CardContent>
         {showAnalysis ? (
-          <div className="space-y-4">
-            <p className="text-gray-700 whitespace-pre-line">{analysis}</p>
-            <Button onClick={() => setShowAnalysis(false)} variant="outline">
-              Back to Graph
-            </Button>
+          <div className="relative w-full h-[300px] border rounded-lg p-4 bg-gray-50">
+            {/* Back Arrow with tooltip */}
+            <button
+              onClick={() => setShowAnalysis(false)}
+              className="absolute top-2 left-2 text-gray-600 hover:text-black"
+              title="Back to Chart"
+            >
+              <ArrowLeft size={20} />
+            </button>
+
+            {/* Scrollable analysis text with top padding to avoid overlap */}
+            <div className="h-full overflow-y-auto pr-2 pt-8">
+              <p className="text-gray-700 text-sm whitespace-pre-line">
+                {analysis}
+              </p>
+            </div>
           </div>
         ) : chartData.length > 0 ? (
           <ResponsiveContainer width="100%" height={300}>
@@ -134,7 +154,6 @@ function RevenueOrdersChart({ orders }) {
               <XAxis dataKey="date" />
               <YAxis />
               <Tooltip />
-              {/* Only 1 line at a time depending on dropdown */}
               <Line
                 type="monotone"
                 dataKey={metric}
