@@ -7,6 +7,8 @@ const nextConfig = {
       { protocol: "https", hostname: "**.googleusercontent.com" },
       { protocol: "https", hostname: "firebasestorage.googleapis.com" },
       { protocol: "https", hostname: "res.cloudinary.com" },
+      { protocol: "https", hostname: "picsum.photos" },
+      { protocol: "https", hostname: "i.pravatar.cc" },
     ],
   },
   async headers() {

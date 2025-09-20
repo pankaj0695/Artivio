@@ -35,7 +35,9 @@ export default function SignUpPage() {
     handleSubmit,
     setValue,
     formState: { errors },
-  } = useForm();
+  } = useForm({
+    defaultValues: { role: "customer" },
+  });
 
   const onSubmit = async (data) => {
     setLoading(true);
@@ -47,16 +49,20 @@ export default function SignUpPage() {
       return;
     }
 
+    // Ensure role is captured even if the Select wasn't registered
+    const role = data.role || selectedRole || "customer";
     const { user, error } = await signUpWithEmail(data.email, data.password, {
       name: data.name,
       email: data.email,
-      role: data.role,
+      role,
     });
 
     if (error) {
       setError(error);
     } else {
-      router.push("/");
+      // Redirect artisans to onboarding, others to home
+  if (role === "artisan") router.push("/artisan/profile");
+      else router.push("/");
     }
 
     setLoading(false);
@@ -98,7 +104,10 @@ export default function SignUpPage() {
       profile
     );
     if (error) setError(error);
-    else router.push("/");
+    else {
+      if (selectedRole === "artisan") router.push("/artisan/profile");
+      else router.push("/");
+    }
     setShowRolePrompt(false);
     setPendingGoogleUser(null);
     setLoading(false);
@@ -154,7 +163,14 @@ export default function SignUpPage() {
 
             <div>
               <Label htmlFor="role">I want to</Label>
-              <Select onValueChange={(value) => setValue("role", value)}>
+              {/* Keep Select controlled and sync with RHF */}
+              <Select
+                value={selectedRole}
+                onValueChange={(value) => {
+                  setSelectedRole(value);
+                  setValue("role", value, { shouldDirty: true, shouldTouch: true });
+                }}
+              >
                 <SelectTrigger className="rounded-full">
                   <SelectValue placeholder="Select your role" />
                 </SelectTrigger>
@@ -163,6 +179,8 @@ export default function SignUpPage() {
                   <SelectItem value="artisan">Sell my crafts</SelectItem>
                 </SelectContent>
               </Select>
+              {/* Ensure role is part of form data */}
+              <input type="hidden" value={selectedRole} {...register("role")} />
             </div>
 
             <div>
