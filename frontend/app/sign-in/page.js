@@ -89,7 +89,10 @@ export default function SignInPage() {
       profile
     );
     if (error) setError(error);
-    else router.push("/");
+    else {
+      if (selectedRole === "artisan") router.push("/artisan/profile");
+      else router.push("/");
+    }
     setShowRolePrompt(false);
     setPendingGoogleUser(null);
     setLoading(false);

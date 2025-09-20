@@ -4,6 +4,7 @@ import {
   getDocs,
   getDoc,
   addDoc,
+  setDoc,
   updateDoc,
   deleteDoc,
   query,
@@ -269,3 +270,61 @@ export const addUserAddress = async (userId, address) => {
     return { addresses: null, error: error.message };
   }
 };
+
+// ---------------- Artisan Public Profile (Public Collection) ----------------
+
+// Read public artisan profile
+export async function getArtisanPublic(uid) {
+  try {
+    const ref = doc(db, "artisanPublic", uid);
+    const snap = await getDoc(ref);
+    return snap.exists() ? { id: uid, ...snap.data() } : null;
+  } catch (error) {
+    console.error("getArtisanPublic error:", error);
+    return null;
+  }
+}
+
+// Create/update public artisan profile (creates collection/doc on first write)
+export async function upsertArtisanPublic(uid, data) {
+  try {
+    const ref = doc(db, "artisanPublic", uid);
+    const now = new Date();
+    await setDoc(
+      ref,
+      { ...data, updatedAt: now, createdAt: data?.createdAt || now },
+      { merge: true }
+    );
+    return { error: null };
+  } catch (error) {
+    return { error: error.message };
+  }
+}
+
+// Portfolio subcollection helpers
+export async function listPortfolio(uid, count = 12) {
+  try {
+    const ref = collection(db, "artisanPublic", uid, "portfolio");
+    const snap = await getDocs(query(ref, limit(count)));
+    return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  } catch (error) {
+    console.error("listPortfolio error:", error);
+    return [];
+  }
+}
+
+// List all public artisans (for directory)
+export async function listArtisans(count = 50) {
+  try {
+    const ref = collection(db, "artisanPublic");
+    let q = query(ref, orderBy("createdAt", "desc"));
+    if (count) {
+      q = query(q, limit(count));
+    }
+    const snap = await getDocs(q);
+    return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  } catch (error) {
+    console.error("listArtisans error:", error);
+    return [];
+  }
+}

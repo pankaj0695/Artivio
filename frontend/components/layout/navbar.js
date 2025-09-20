@@ -35,6 +35,21 @@ export function Navbar() {
             >
               Products
             </Link>
+            {profile?.role === "artisan" ? (
+              <Link
+                href={user?.uid ? `/artisan/${user.uid}` : "/artisan/profile"}
+                className="text-gray-700 hover:text-primary transition-colors"
+              >
+                My Storefront
+              </Link>
+            ) : (
+              <Link
+                href="/artisans"
+                className="text-gray-700 hover:text-primary transition-colors"
+              >
+                Artisans
+              </Link>
+            )}
             {profile?.role === "artisan" && (
               <Link
                 href="/artisan/dashboard"
