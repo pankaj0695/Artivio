@@ -339,3 +339,68 @@ export async function listArtisans(count = 50) {
     return [];
   }
 }
+
+export const getAllArtisanOrders = async (artisanId) => {
+  try {
+    // 1. Get artisan products
+    const productsQuery = query(
+      collection(db, "products"),
+      where("artisanId", "==", artisanId)
+    );
+    const productsSnapshot = await getDocs(productsQuery);
+    const artisanProductIds = productsSnapshot.docs.map((doc) => doc.id);
+
+    if (artisanProductIds.length === 0) {
+      return { orders: [], error: null };
+    }
+
+    // 2. Get all orders sorted by createdAt
+    const ordersQuery = query(
+      collection(db, "orders"),
+      orderBy("createdAt", "desc")
+    );
+    const ordersSnapshot = await getDocs(ordersQuery);
+
+    // 3. Filter orders containing artisan products + attach buyer
+    const artisanOrders = await Promise.all(
+      ordersSnapshot.docs.map(async (docSnap) => {
+        const order = { id: docSnap.id, ...docSnap.data() };
+
+        const hasArtisanProduct = order.items?.some((item) =>
+          artisanProductIds.includes(item.productId)
+        );
+
+        if (!hasArtisanProduct) return null;
+
+        // fetch buyer details
+        let buyer = null;
+        if (order.userId) {
+          const userDoc = await getDoc(doc(db, "users", order.userId));
+          if (userDoc.exists()) {
+            buyer = { id: userDoc.id, ...userDoc.data() };
+          }
+        }
+
+        return { ...order, buyer };
+      })
+    );
+
+    return { orders: artisanOrders.filter(Boolean), error: null };
+  } catch (error) {
+    return { orders: [], error: error.message };
+  }
+};
+
+export const updateOrderStatus = async (orderId, status) => {
+  try {
+    const orderRef = doc(db, "orders", orderId);
+    await updateDoc(orderRef, {
+      status,
+      updatedAt: new Date(),
+    });
+
+    return { success: true, error: null };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+};
