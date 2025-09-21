@@ -6,7 +6,6 @@ class BlockchainService {
     this.provider = new ethers.providers.JsonRpcProvider(rpcUrl, {
        name: 'polygon-amoy',
        chainId: 80002,
-       ensAddress: null // Disable ENS
     });
     this.wallet = new ethers.Wallet(privateKey, this.provider);
     this.contract = new ethers.Contract(contractAddress, contractABI.abi, this.wallet);
