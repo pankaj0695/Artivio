@@ -11,18 +11,28 @@ class BlockchainService {
     this.contract = new ethers.Contract(contractAddress, contractABI.abi, this.wallet);
   }
 
+  _validateAddress(address) {
+    try {
+      return ethers.utils.getAddress(address);
+    } catch {
+      throw new Error(`Invalid Ethereum address: ${address}`);
+    }
+  }
+
   async mintCoA({ sku, artisanAddress, tokenURI, royaltyBps = 500 }) {
     try {
+      artisanAddress = this._validateAddress(artisanAddress);
+
       const tx = await this.contract.mintCoA(
         artisanAddress,
         sku,
         tokenURI,
         royaltyBps
       );
-      
+
       const receipt = await tx.wait();
       const tokenId = await this.contract.calculateTokenId(sku, 0); // COA_KIND = 0
-      
+
       return {
         tokenId: tokenId.toString(),
         txHash: tx.hash,
@@ -35,6 +45,8 @@ class BlockchainService {
 
   async mintRights({ sku, artisanAddress, tokenURI, amount, royaltyBps = 500 }) {
     try {
+      artisanAddress = this._validateAddress(artisanAddress);
+
       const tx = await this.contract.mintRights(
         artisanAddress,
         sku,
@@ -42,10 +54,10 @@ class BlockchainService {
         amount,
         royaltyBps
       );
-      
+
       const receipt = await tx.wait();
       const tokenId = await this.contract.calculateTokenId(sku, 1); // RIGHTS_KIND = 1
-      
+
       return {
         tokenId: tokenId.toString(),
         amount: amount.toString(),
@@ -61,7 +73,7 @@ class BlockchainService {
     try {
       const tx = await this.contract.bindLicense(tokenId, licenseCid);
       const receipt = await tx.wait();
-      
+
       return {
         ok: true,
         txHash: tx.hash,
@@ -77,7 +89,7 @@ class BlockchainService {
       const uri = await this.contract.uri(tokenId);
       const exists = await this.contract.exists(tokenId);
       const totalSupply = await this.contract.totalSupply(tokenId);
-      
+
       if (!exists) {
         throw new Error('Token does not exist');
       }
@@ -86,7 +98,7 @@ class BlockchainService {
       const tokenIdBN = ethers.BigNumber.from(tokenId);
       const sku = tokenIdBN.shr(16).toString(); // Right shift 16 bits
       const kind = tokenIdBN.and(0xFFFF).toString(); // Get last 16 bits
-      
+
       return {
         tokenId: tokenId.toString(),
         sku,
@@ -104,7 +116,7 @@ class BlockchainService {
     try {
       const tx = await this.contract.recordProvenanceNote(tokenId, ref);
       await tx.wait();
-      
+
       return {
         ok: true,
         recordedAt: new Date().toISOString()
@@ -118,10 +130,10 @@ class BlockchainService {
     try {
       const tokenInfo = await this.getTokenInfo(tokenId);
       const [royaltyReceiver, royaltyAmount] = await this.contract.royaltyInfo(
-        tokenId, 
+        tokenId,
         ethers.utils.parseEther("1") // 1 MATIC for percentage calculation
       );
-      
+
       return {
         valid: tokenInfo.exists,
         tokenId: tokenInfo.tokenId,
@@ -142,19 +154,18 @@ class BlockchainService {
     }
   }
 
-  // Add this method to BlockchainService
-async testConnection() {
-  try {
-    const network = await this.provider.getNetwork();
-    const balance = await this.wallet.getBalance();
-    console.log('Connected to network:', network.name, 'Chain ID:', network.chainId);
-    console.log('Wallet balance:', ethers.utils.formatEther(balance), 'MATIC');
-    return true;
-  } catch (error) {
-    console.error('Connection test failed:', error);
-    return false;
+  async testConnection() {
+    try {
+      const network = await this.provider.getNetwork();
+      const balance = await this.wallet.getBalance();
+      console.log('Connected to network:', network.name, 'Chain ID:', network.chainId);
+      console.log('Wallet balance:', ethers.utils.formatEther(balance), 'MATIC');
+      return true;
+    } catch (error) {
+      console.error('Connection test failed:', error);
+      return false;
+    }
   }
-}
 }
 
 module.exports = BlockchainService;
