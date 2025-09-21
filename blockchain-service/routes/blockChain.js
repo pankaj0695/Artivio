@@ -35,7 +35,7 @@ const mintRightsSchema = Joi.object({
 const uploadMetadataSchema = Joi.object({
   name: Joi.string().required(),
   description: Joi.string().required(),
-  imageCID: Joi.string().required(),
+  imageCID: Joi.string(),
   attributes: Joi.array().items(Joi.object({
     trait_type: Joi.string().required(),
     value: Joi.string().required()
