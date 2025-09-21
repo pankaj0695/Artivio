@@ -12,6 +12,7 @@ import {
   orderBy,
   limit,
   startAfter,
+  serverTimestamp
 } from "firebase/firestore";
 import { db } from "./firebase";
 // Users
@@ -35,6 +36,15 @@ export async function updateUserProfile(uid, data) {
 // Products
 export const createProduct = async (productData) => {
   try {
+    // if (productData?.type == "product"){
+    // productData.nftTokenId= ""
+    // productData.nftTxHash= ""
+    // productData.nftIpfsHash=""
+    // productData.nftMinted= false
+    // productData.nftMintedAt= ""
+    // productData.nftError=""
+    // }
+
     const docRef = await addDoc(collection(db, "products"), {
       ...productData,
       type: productData?.type || "product",
@@ -59,6 +69,46 @@ export const updateProduct = async (productId, productData) => {
     return { error: error.message };
   }
 };
+
+export async function updateProductWithNFT(productId, nftResult) {
+  try {
+    const nftData = {
+      nftIpfsHash: nftResult.ipfsHash,
+      nftTokenId: nftResult.tokenId,
+      nftTxHash: nftResult.txHash,
+      nftMinted: true,
+      nftMintedAt: serverTimestamp(), // Use Firestore server timestamp
+      nftError: null, // Clear any previous errors
+      updatedAt: serverTimestamp()
+    };
+
+    // Remove undefined values
+    const cleanData = Object.fromEntries(
+      Object.entries(nftData).filter(([_, v]) => v !== undefined && v !== null)
+    );
+
+    console.log('Updating product with NFT data:', cleanData);
+    
+    const productRef = doc(db, "products", productId);
+    await updateDoc(productRef, cleanData);
+    
+    console.log('Product updated successfully');
+    return true;
+  } catch (error) {
+    console.error('Error updating product with NFT data:', error);
+    throw error;
+  }
+}
+
+export async function updateProductNFTError(productId, error) {
+  const productRef = doc(db, 'products', productId);
+  await updateDoc(productRef, {
+    nftError: error,
+    nftMinted: false,
+    updatedAt: new Date(),
+  });
+}
+
 // ✅ existing generic function
 // ✅ Main function: fetch products/services by artisan
 export const getProductsByArtisan = async (userId, type = null) => {

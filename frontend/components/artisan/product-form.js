@@ -1,5 +1,4 @@
 "use client";
-
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
@@ -16,10 +15,11 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ImageUploader } from "@/components/ui/image-uploader";
 import { AIButton } from "@/components/ai/ai-button";
-import { createProduct, updateProduct } from "@/lib/firestore";
+import { createProduct, updateProduct, updateProductWithNFT} from "@/lib/firestore";
 import { useAuth } from "@/hooks/use-auth";
 import { useRouter } from "next/navigation";
 import { Film, UploadCloud } from "lucide-react";
+import { BlockchainService } from "@/lib/blockchain";
 
 const categories = [
   "pottery",
@@ -40,6 +40,8 @@ export function ProductForm({ product, isEdit = false }) {
   const [images, setImages] = useState(product?.images || []);
   const [videoGenerating, setVideoGenerating] = useState(false);
   const [videoUploading, setVideoUploading] = useState(false);
+  const [nftMinting, setNftMinting] = useState(false);
+  const [nftStatus, setNftStatus] = useState(null);
 
   const {
     register,
@@ -211,7 +213,6 @@ export function ProductForm({ product, isEdit = false }) {
 
   const onSubmit = async (data) => {
     setLoading(true);
-
     const productData = {
       ...data,
       artisanId: user.uid,
@@ -227,18 +228,64 @@ export function ProductForm({ product, isEdit = false }) {
       currency: "INR",
     };
 
+    let productRef;
     try {
       if (isEdit) {
         await updateProduct(product.id, productData);
+        productRef = { id: product.id };
       } else {
-        await createProduct(productData);
+        productRef = await createProduct(productData);
+        productData.id = productRef.id;
+      }
+
+      const sku = parseInt(`${Date.now()}${Math.floor(Math.random() * 1000)}`);
+
+      setNftMinting(true);
+      setNftStatus("Minting blockchain certificate...");
+
+      const nftResult = await BlockchainService.mintCoA({
+        ...productData,
+        sku: sku,
+        artisanWallet: data.artisanWallet,
+      });
+
+      if (nftResult.success) {
+        // Step 4: Update product with NFT data
+        // await updateProductWithNFT(productRef.id, nftResult);
+
+        setNftStatus({
+          type: "success",
+          message: "Blockchain certificate created successfully!",
+          tokenId: nftResult.tokenId,
+          txHash: nftResult.txHash,
+        });
+
+        // Redirect after a brief delay to show success message
+        setTimeout(() => {
+          router.push("/artisan/products");
+        }, 3000);
+      } else {
+        // NFT minting failed, but product was created
+        await updateProductNFTError(productRef.id, nftResult.error);
+
+        setNftStatus({
+          type: "error",
+          message: `Product saved, but blockchain certificate failed: ${nftResult.error}`,
+          canRetry: true,
+          productId: productRef.id,
+        });
       }
 
       router.push("/artisan/products");
     } catch (error) {
       console.error("Error saving product:", error);
+      setNftStatus({
+        type: "error",
+        message: "Failed to save product. Please try again.",
+      });
     } finally {
       setLoading(false);
+      setNftMinting(false);
     }
   };
 
@@ -246,7 +293,13 @@ export function ProductForm({ product, isEdit = false }) {
     <Card className="max-w-4xl mx-auto">
       <CardHeader>
         <CardTitle>
-          {isEdit ? (listingType === "service" ? "Edit Service" : "Edit Product") : listingType === "service" ? "Add New Service" : "Add New Product"}
+          {isEdit
+            ? listingType === "service"
+              ? "Edit Service"
+              : "Edit Product"
+            : listingType === "service"
+            ? "Add New Service"
+            : "Add New Product"}
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -255,7 +308,9 @@ export function ProductForm({ product, isEdit = false }) {
             <div>
               <Label htmlFor="type">Listing Type</Label>
               <Select
-                onValueChange={(value) => setValue("type", value, { shouldDirty: true })}
+                onValueChange={(value) =>
+                  setValue("type", value, { shouldDirty: true })
+                }
                 defaultValue={listingType}
               >
                 <SelectTrigger>
@@ -269,7 +324,11 @@ export function ProductForm({ product, isEdit = false }) {
             </div>
             <div>
               <div className="flex items-center gap-2 mb-2">
-                <Label htmlFor="title">{listingType === "service" ? "Service Title" : "Product Title"}</Label>
+                <Label htmlFor="title">
+                  {listingType === "service"
+                    ? "Service Title"
+                    : "Product Title"}
+                </Label>
                 <AIButton
                   onClick={generateTagline}
                   loading={aiLoading.tagline}
@@ -382,9 +441,15 @@ export function ProductForm({ product, isEdit = false }) {
 
             <div>
               <div className="flex items-center justify-between">
-                <Label>{listingType === "service" ? "Images (optional)" : "Product Images"}</Label>
+                <Label>
+                  {listingType === "service"
+                    ? "Images (optional)"
+                    : "Product Images"}
+                </Label>
                 {listingType !== "service" && (
-                  <span className="text-xs text-red-600">Required for video generation</span>
+                  <span className="text-xs text-red-600">
+                    Required for video generation
+                  </span>
                 )}
               </div>
               <ImageUploader
@@ -400,65 +465,89 @@ export function ProductForm({ product, isEdit = false }) {
             </div>
 
             {listingType !== "service" && (
-            <div>
-              <div className="flex items-center gap-4 mb-2">
-                <Label htmlFor="videoUrl" className="mr-auto">
-                  Video
-                </Label>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={generateVideo}
-                  disabled={videoGenerating || images.length === 0}
-                >
-                  <Film className="h-4 w-4 mr-2" />
-                  {videoGenerating ? "Generating…" : "Generate Video"}
-                </Button>
-                <div>
-                  <label
-                    className={`inline-flex items-center px-3 py-2 border rounded-md text-sm ${
-                      videoGenerating
-                        ? "opacity-50 cursor-not-allowed"
-                        : "cursor-pointer"
-                    }`}
+              <div>
+                <div className="flex items-center gap-4 mb-2">
+                  <Label htmlFor="videoUrl" className="mr-auto">
+                    Video
+                  </Label>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={generateVideo}
+                    disabled={videoGenerating || images.length === 0}
                   >
-                    <UploadCloud className="h-4 w-4 mr-2" /> Upload Video
-                    <input
-                      type="file"
-                      accept="video/*"
-                      className="hidden"
-                      onChange={handleVideoUpload}
-                      disabled={videoGenerating}
+                    <Film className="h-4 w-4 mr-2" />
+                    {videoGenerating ? "Generating…" : "Generate Video"}
+                  </Button>
+                  <div>
+                    <label
+                      className={`inline-flex items-center px-3 py-2 border rounded-md text-sm ${
+                        videoGenerating
+                          ? "opacity-50 cursor-not-allowed"
+                          : "cursor-pointer"
+                      }`}
+                    >
+                      <UploadCloud className="h-4 w-4 mr-2" /> Upload Video
+                      <input
+                        type="file"
+                        accept="video/*"
+                        className="hidden"
+                        onChange={handleVideoUpload}
+                        disabled={videoGenerating}
+                      />
+                    </label>
+                  </div>
+                </div>
+                <Input
+                  id="videoUrl"
+                  {...register("videoUrl")}
+                  placeholder="Optional video URL"
+                />
+                {videoGenerating && (
+                  <div className="mt-3">
+                    <div className="w-full h-48 rounded-lg bg-gray-200 animate-pulse" />
+                    <p className="text-sm text-gray-600 mt-2">
+                      Generating your video (about 1-2 minutes)…
+                    </p>
+                  </div>
+                )}
+                {videoUploading && (
+                  <p className="text-sm text-gray-600 mt-2">Uploading video…</p>
+                )}
+                {videoPreviewUrl && (
+                  <div className="mt-3">
+                    <video
+                      className="w-full rounded-lg"
+                      src={videoPreviewUrl}
+                      controls
                     />
-                  </label>
-                </div>
+                  </div>
+                )}
               </div>
-              <Input
-                id="videoUrl"
-                {...register("videoUrl")}
-                placeholder="Optional video URL"
-              />
-              {videoGenerating && (
-                <div className="mt-3">
-                  <div className="w-full h-48 rounded-lg bg-gray-200 animate-pulse" />
-                  <p className="text-sm text-gray-600 mt-2">
-                    Generating your video (about 1-2 minutes)…
-                  </p>
-                </div>
-              )}
-              {videoUploading && (
-                <p className="text-sm text-gray-600 mt-2">Uploading video…</p>
-              )}
-              {videoPreviewUrl && (
-                <div className="mt-3">
-                  <video
-                    className="w-full rounded-lg"
-                    src={videoPreviewUrl}
-                    controls
-                  />
-                </div>
-              )}
-            </div>
+            )}
+
+            {listingType == "product" && (
+              // Add this to your form fields in ProductForm component
+              <div>
+                <Label htmlFor="artisanWallet">Blockchain Wallet Address</Label>
+                <Input
+                  id="artisanWallet"
+                  {...register("artisanWallet", {
+                    required:
+                      "Wallet address is required for blockchain certificate",
+                    pattern: {
+                      value: /^0x[a-fA-F0-9]{40}$/,
+                      message: "Please enter a valid Ethereum wallet address",
+                    },
+                  })}
+                  placeholder="0x1234567890123456789012345678901234567890"
+                  error={errors.artisanWallet?.message}
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  This address will receive NFT royalties. Make sure you control
+                  this wallet.
+                </p>
+              </div>
             )}
 
             {listingType === "service" && (
@@ -466,11 +555,15 @@ export function ProductForm({ product, isEdit = false }) {
                 <Label htmlFor="bookingUrl">Booking/Contact URL</Label>
                 <Input
                   id="bookingUrl"
-                  {...register("bookingUrl", { required: "Booking URL is required for services" })}
+                  {...register("bookingUrl", {
+                    required: "Booking URL is required for services",
+                  })}
                   placeholder="https://wa.me/91XXXXXXXXXX or Calendly link"
                 />
                 {errors.bookingUrl?.message && (
-                  <p className="text-xs text-red-600 mt-1">{errors.bookingUrl.message}</p>
+                  <p className="text-xs text-red-600 mt-1">
+                    {errors.bookingUrl.message}
+                  </p>
                 )}
               </div>
             )}
@@ -489,13 +582,95 @@ export function ProductForm({ product, isEdit = false }) {
             </div>
           </div>
 
+          {/* NFT Minting Status */}
+          {nftMinting && (
+            <Card className="border-blue-200 bg-blue-50">
+              <CardContent className="pt-6">
+                <div className="flex items-center space-x-3">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                  <div>
+                    <p className="text-sm font-medium text-blue-900">
+                      Creating Blockchain Certificate
+                    </p>
+                    <p className="text-xs text-blue-700">
+                      {nftStatus || "Please wait..."}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {nftStatus && nftStatus === "object" && (
+            <Card
+              className={`border-2 ${
+                nftStatus.type === "success"
+                  ? "border-green-200 bg-green-50"
+                  : "border-red-200 bg-red-50"
+              }`}
+            >
+              <CardContent className="pt-6">
+                <div className="space-y-2">
+                  <p
+                    className={`text-sm font-medium ${
+                      nftStatus.type === "success"
+                        ? "text-green-900"
+                        : "text-red-900"
+                    }`}
+                  >
+                    {nftStatus.message}
+                  </p>
+
+                  {nftStatus.type === "success" && (
+                    <div className="text-xs space-y-1">
+                      <p>
+                        <strong>Token ID:</strong> {nftStatus.tokenId}
+                      </p>
+                      <p>
+                        <strong>Transaction:</strong>{" "}
+                        <a
+                          href={BlockchainService.getPolygonScanUrl(
+                            nftStatus.txHash
+                          )}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:underline"
+                        >
+                          View on PolygonScan
+                        </a>
+                      </p>
+                    </div>
+                  )}
+
+                  {nftStatus.canRetry && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => retryNFTMinting(nftStatus.productId)}
+                      className="mt-2"
+                    >
+                      Retry Blockchain Certificate
+                    </Button>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           <div className="flex gap-4">
             <Button type="submit" disabled={loading} className="flex-1">
-              {loading
+              {nftMinting
+                ? "Creating Certificate..."
+                : loading
                 ? "Saving..."
                 : isEdit
-                ? listingType === "service" ? "Update Service" : "Update Product"
-                : listingType === "service" ? "Create Service" : "Create Product"}
+                ? listingType === "service"
+                  ? "Update Service"
+                  : "Update Product"
+                : listingType === "service"
+                ? "Create Service"
+                : "Create Product"}
             </Button>
             <Button
               type="button"

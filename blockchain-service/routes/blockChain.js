@@ -25,7 +25,8 @@ const mintCoASchema = Joi.object({
   artisanId: Joi.string().required(),
   tokenURI: Joi.string().uri().required(),
   royaltyBps: Joi.number().integer().min(0).max(10000).default(500),
-  walletAddress: Joi.string().required()
+  walletAddress: Joi.string().required(),
+  productId: Joi.string().required()
 });
 
 const mintRightsSchema = Joi.object({
@@ -75,7 +76,8 @@ router.post('/mint-coa', async (req, res) => {
       tokenURI: value.tokenURI,
       royaltyBps: value.royaltyBps,
       txHash: result.txHash,
-      blockNumber: result.blockNumber
+      blockNumber: result.blockNumber,
+      product: value.productId
     });
 
     res.json({
