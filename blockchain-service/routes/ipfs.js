@@ -73,6 +73,47 @@ router.post('/upload-json', async (req, res) => {
   }
 });
 
+// Add this to your IPFS routes file
+
+// POST /upload-metadata - Specifically for NFT metadata
+router.post('/upload-metadata', async (req, res) => {
+  try {
+    const { name, description, imageCID, external_url, attributes } = req.body;
+    
+    // Validate required fields
+    if (!name || !description) {
+      return res.status(400).json({ 
+        error: 'Name and description are required for NFT metadata' 
+      });
+    }
+
+    // Create NFT metadata object following ERC-1155 standard
+    const metadata = {
+      name,
+      description,
+      imageCID: imageCID || '',
+      external_url: external_url || '',
+      attributes: attributes || []
+    };
+
+    // Generate filename
+    const fileName = `metadata-${name.replace(/[^a-zA-Z0-9]/g, '_')}-${Date.now()}.json`;
+    
+    // Upload to IPFS
+    const result = await ipfsService.uploadJSON(metadata, fileName);
+    
+    res.json({
+      cid: result.cid,
+      ipfsUrl: result.ipfsUrl,
+      gatewayUrl: result.gatewayUrl,
+      metadata: metadata
+    });
+  } catch (error) {
+    console.error('Upload metadata error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // GET /usage (Check Pinata usage)
 router.get('/usage', async (req, res) => {
   try {
