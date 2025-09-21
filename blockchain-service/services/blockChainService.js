@@ -19,9 +19,9 @@ class BlockchainService {
     }
   }
 
-  async mintCoA({ sku, artisanAddress, tokenURI, royaltyBps = 500 }) {
+  async mintCoA({ sku, artisanAddress, tokenURI, walletAddress, royaltyBps = 500}) {
     try {
-      artisanAddress = this._validateAddress(artisanAddress);
+      artisanAddress = this._validateAddress(walletAddress);
 
       const tx = await this.contract.mintCoA(
         artisanAddress,
