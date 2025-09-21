@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -9,11 +9,20 @@ import { Badge } from "@/components/ui/badge";
 import { LoadingPage } from "@/components/ui/loading";
 import { useCartStore } from "@/lib/store";
 import { getProduct } from "@/lib/firestore";
-import { ShoppingCart, Star, Package, Truck, Trash2 } from "lucide-react";
+import { ShoppingCart, Trash2, Star, Package, Truck } from "lucide-react";
 import { toast } from "sonner";
+
+// Swiper imports
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Navigation, Pagination } from "swiper/modules";
+import "swiper/css";
+import "swiper/css/navigation";
+import "swiper/css/pagination";
 
 export default function ProductDetailPage() {
   const params = useParams();
+  const router = useRouter();
+
   const items = useCartStore((state) => state.items);
   const addItem = useCartStore((state) => state.addItem);
   const removeItem = useCartStore((state) => state.removeItem);
@@ -33,61 +42,62 @@ export default function ProductDetailPage() {
   const handleToggleCart = () => {
     if (isInCart) {
       removeItem(product.id);
-      toast.error(`${product.title} has been removed from your cart.`);
+      toast.error(`${product.title} removed from cart`);
     } else {
       addItem(product);
-      toast.success(`${product.title} has been added to your cart.`);
+      toast.success(`${product.title} added to cart`);
     }
   };
+
+  const handleBookAppointment = () => {
+    router.push(
+      `/checkout/appointment?productId=${product.id}&price=${product.price}`
+    );
+  };
+
+  // Build slides: images + optional video
+  const slides = [];
+  if (product.images?.length) {
+    slides.push(...product.images.map((img) => ({ type: "image", src: img })));
+  }
+  if (product.videoUrl) {
+    slides.push({ type: "video", src: product.videoUrl });
+  }
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-        {/* Images */}
+        {/* Swiper Carousel */}
         <div className="space-y-4">
-          <div className="aspect-square relative overflow-hidden rounded-2xl bg-gray-100">
-            <Image
-              src={
-                product.images?.[0] ||
-                "https://images.pexels.com/photos/1047540/pexels-photo-1047540.jpeg"
-              }
-              alt={product.title}
-              fill
-              sizes="(max-width: 1024px) 100vw, 50vw"
-              className="object-cover"
-            />
-          </div>
-
-          {product.images?.length > 1 && (
-            <div className="grid grid-cols-4 gap-4">
-              {product.images.slice(1, 5).map((image, index) => (
-                <div
-                  key={index}
-                  className="aspect-square relative overflow-hidden rounded-lg bg-gray-100"
-                >
-                  <Image
-                    src={image}
-                    alt={`${product.title} ${index + 2}`}
-                    fill
-                    sizes="(max-width: 1024px) 25vw, 12vw"
-                    className="object-cover"
-                  />
-                </div>
-              ))}
-            </div>
-          )}
-
-          {product.videoUrl && (
-            <div className="aspect-video relative overflow-hidden rounded-2xl bg-gray-100">
-              <video
-                controls
-                className="w-full h-full object-cover"
-                src={product.videoUrl}
-              >
-                Your browser does not support the video tag.
-              </video>
-            </div>
-          )}
+          <Swiper
+            modules={[Navigation, Pagination]}
+            navigation
+            pagination={{ clickable: true }}
+            spaceBetween={10}
+          >
+            {slides.map((slide, index) => (
+              <SwiperSlide key={index}>
+                {slide.type === "image" ? (
+                  <div className="aspect-square relative overflow-hidden rounded-2xl bg-gray-100">
+                    <Image
+                      src={slide.src}
+                      alt={`Slide ${index + 1}`}
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                ) : (
+                  <div className="aspect-video relative overflow-hidden rounded-2xl bg-gray-100">
+                    <video
+                      controls
+                      className="w-full h-full object-cover"
+                      src={slide.src}
+                    />
+                  </div>
+                )}
+              </SwiperSlide>
+            ))}
+          </Swiper>
         </div>
 
         {/* Product Info */}
@@ -113,15 +123,13 @@ export default function ProductDetailPage() {
           </div>
 
           <div className="prose max-w-none">
-            <p className="text-gray-700 leading-relaxed">
-              {product.description}
-            </p>
+            <p className="text-gray-700 leading-relaxed">{product.description}</p>
           </div>
 
           {product.tags?.length > 0 && (
             <div className="flex flex-wrap gap-2">
-              {product.tags.map((tag, index) => (
-                <Badge key={index} variant="secondary" className="rounded-full">
+              {product.tags.map((tag, i) => (
+                <Badge key={i} variant="secondary" className="rounded-full">
                   #{tag}
                 </Badge>
               ))}
@@ -131,28 +139,21 @@ export default function ProductDetailPage() {
           <div className="space-y-4">
             {isService ? (
               <Button
-                asChild
+                onClick={handleBookAppointment}
                 size="lg"
                 className="w-full rounded-full text-lg py-6"
-                disabled={!product.bookingUrl}
               >
-                <a href={product.bookingUrl || "#"} target="_blank" rel="noreferrer">
-                  Book Appointment
-                </a>
+                Book Appointment
               </Button>
             ) : (
               <Button
                 onClick={handleToggleCart}
                 size="lg"
                 className="w-full rounded-full text-lg py-6"
-                disabled={product.stock === 0 && !isInCart}
                 variant={isInCart ? "destructive" : "default"}
+                disabled={product.stock === 0 && !isInCart}
               >
-                {isInCart ? (
-                  <Trash2 className="mr-2 h-5 w-5" />
-                ) : (
-                  <ShoppingCart className="mr-2 h-5 w-5" />
-                )}
+                {isInCart ? <Trash2 className="mr-2 h-5 w-5" /> : <ShoppingCart className="mr-2 h-5 w-5" />}
                 {isInCart ? "Remove from Cart" : "Add to Cart"}
               </Button>
             )}
@@ -185,9 +186,7 @@ export default function ProductDetailPage() {
                 </div>
                 <div>
                   <p className="font-medium">Artisan Profile</p>
-                  <p className="text-sm text-gray-600">
-                    Handcrafting since 2015
-                  </p>
+                  <p className="text-sm text-gray-600">Handcrafting since 2015</p>
                 </div>
                 <div className="ml-auto flex items-center">
                   <Star className="h-4 w-4 fill-yellow-400 text-yellow-400 mr-1" />

@@ -5,11 +5,19 @@ import { RoleGuard } from "@/components/auth/role-guard";
 import { DashboardKPIs } from "@/components/artisan/dashboard-kpis";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { getArtisanStats, getProducts, getArtisanOrders } from "@/lib/firestore";
+import {
+  getArtisanStats,
+  getAllArtisanOrders,
+  getProducts,
+  getArtisanProducts,
+  getArtisanOrders,
+  getArtisanAppointments,
+  getArtisanServices,
+} from "@/lib/firestore";
 import { useAuth } from "@/hooks/use-auth";
 import Link from "next/link";
 import RevenueOrdersChart from "@/components/artisan/revenueOrderCharts";
-import { Plus, Package, ShoppingBag } from "lucide-react";
+import { Plus, Package, ShoppingBag, Calendar } from "lucide-react";
 
 function DashboardContent() {
   const { user } = useAuth();
@@ -22,18 +30,36 @@ function DashboardContent() {
 
   const { data: productsData } = useQuery({
     queryKey: ["artisan-products", user?.uid],
-    queryFn: () => getProducts({ artisanId: user.uid, limit: 5 }),
+    queryFn: () => getArtisanProducts(user.uid),
     enabled: !!user,
   });
-  console.log("Products Data:", productsData);
+
+  const { data: servicesData } = useQuery({
+    queryKey: ["artisan-services", user?.uid],
+    queryFn: () => getArtisanServices(user.uid),
+    enabled: !!user,
+  });
+  console.log("Services Data:", servicesData);
 
   const { data: ordersData } = useQuery({
     queryKey: ["artisan-orders", user?.uid],
     queryFn: () => getArtisanOrders(user.uid),
     enabled: !!user,
-    
   });
-  console.log("orders data:",ordersData)
+
+  const { data: appointmentsData } = useQuery({
+    queryKey: ["artisan-appointments", user?.uid],
+    queryFn: () => getArtisanAppointments(user.uid),
+    enabled: !!user,
+  });
+  console.log("Appointments Data:", appointmentsData);
+
+  const { data: orders1Data } = useQuery({
+    queryKey: ["artisan-all-orders", user?.uid],
+    queryFn: () => getAllArtisanOrders(user.uid),
+    enabled: !!user,
+  });
+
   const formatDate = (ts) => {
     if (!ts) return "";
     const date = ts.toDate ? ts.toDate() : new Date(ts);
@@ -46,23 +72,29 @@ function DashboardContent() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      {/* Header */}
       <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-4xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-gray-600 mt-2">
-            Welcome back! Here's an overview of your business.
-          </p>
-        </div>
-        <Link href="/artisan/products/new">
-          <Button className="rounded-full">
-            <Plus className="mr-2 h-4 w-4" />
-            Add Product
-          </Button>
-        </Link>
-      </div>
+  <div>
+    <h1 className="text-4xl font-bold text-gray-900">Dashboard</h1>
+    <p className="text-gray-600 mt-2">
+      Welcome back! Here's an overview of your business.
+    </p>
+  </div>
 
+  <Link href="/artisan/products/new">
+    <Button className="rounded-full flex items-center">
+      <Plus className="mr-2 h-5 w-5" /> 
+      <span>Add Product</span>
+    </Button>
+  </Link>
+</div>
+
+
+      {/* KPIs and Charts */}
       <DashboardKPIs stats={statsData?.stats} />
-      <RevenueOrdersChart orders={ordersData?.orders} />
+      <RevenueOrdersChart orders={orders1Data?.orders} />
+
+      {/* 2x2 Grid: Products | Services , Orders | Appointments */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
         {/* Recent Products */}
         <Card className="rounded-2xl border-0 shadow-sm">
@@ -107,7 +139,7 @@ function DashboardContent() {
                       <div className="flex-1">
                         <h4 className="font-medium">{product.title}</h4>
                         <p className="text-sm text-gray-600">
-                          ₹{product.price} • {product.stock} in stock
+                          ₹{product.price}
                         </p>
                       </div>
                     </Link>
@@ -118,11 +150,65 @@ function DashboardContent() {
               <div className="text-center py-8">
                 <Package className="h-12 w-12 text-gray-300 mx-auto mb-4" />
                 <p className="text-gray-500">No products yet</p>
-                <Link href="/artisan/products/new">
-                  <Button className="mt-4 rounded-full">
-                    Add Your First Product
-                  </Button>
-                </Link>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Recent Services */}
+        <Card className="rounded-2xl border-0 shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="flex items-center">
+              <Package className="mr-2 h-5 w-5" />
+              Recent Services
+            </CardTitle>
+            <Link href="/artisan/services">
+              <Button variant="outline" size="sm" className="rounded-full">
+                View All
+              </Button>
+            </Link>
+          </CardHeader>
+          <CardContent>
+            {servicesData?.products?.length > 0 ? (
+              <div className="space-y-4">
+                {servicesData.products.map((service) => {
+                  const displayValue =
+                    service.images?.[0] || service.title.charAt(0);
+                  const isImage =
+                    typeof displayValue === "string" &&
+                    displayValue.startsWith("http");
+
+                  return (
+                    <Link
+                      key={service.id}
+                      href={`../services/${service.id}`}
+                      className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition"
+                    >
+                      <div className="w-12 h-12 bg-primary rounded-lg flex items-center justify-center text-white font-semibold overflow-hidden">
+                        {isImage ? (
+                          <img
+                            src={displayValue}
+                            alt={service.title}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          displayValue
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="font-medium">{service.title}</h4>
+                        <p className="text-sm text-gray-600">
+                          ₹{service.price}
+                        </p>
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <Package className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                <p className="text-gray-500">No services yet</p>
               </div>
             )}
           </CardContent>
@@ -144,64 +230,128 @@ function DashboardContent() {
           <CardContent>
             {ordersData?.orders?.length > 0 ? (
               <div className="space-y-4">
-  {ordersData.orders.map((order) => {
-    const firstItem = order.items?.[0];
-    const buyerName = order.buyer?.name || "Unknown Buyer";
-    const buyerEmail = order.buyer?.email || "";
-    const buyerAvatar = order.buyer?.avatar || null;
+                {ordersData.orders.map((order) => {
+                  const firstItem = order.items?.[0];
+                  const buyerName = order.buyer?.name || "Unknown Buyer";
+                  const buyerEmail = order.buyer?.email || "";
 
-    return (
-      <Link
-        key={order.id}
-        href={`../orders/${order.id}`}
-        className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition"
-      >
-        <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0">
-          {firstItem?.image ? (
-            <img
-              src={firstItem.image}
-              alt={firstItem.title}
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center bg-primary text-white font-semibold">
-              {firstItem?.title?.charAt(0) || "?"}
-            </div>
-          )}
-        </div>
+                  return (
+                    <Link
+                      key={order.id}
+                      href={`../orders/${order.id}`}
+                      className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition"
+                    >
+                      <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0">
+                        {firstItem?.image ? (
+                          <img
+                            src={firstItem.image}
+                            alt={firstItem.title}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-primary text-white font-semibold">
+                            {firstItem?.title?.charAt(0) || "?"}
+                          </div>
+                        )}
+                      </div>
 
-        <div className="flex-1">
-          <h4 className="font-medium">{firstItem?.title}</h4>
-          <p className="text-sm text-gray-600">
-            Buyer: {buyerName} {buyerEmail && `• ${buyerEmail}`}
-          </p>
-          <p className="text-sm text-gray-600">
-            ₹{order.amount} {order.currency} • {formatDate(order.createdAt)}
-          </p>
-        </div>
+                      <div className="flex-1">
+                        <h4 className="font-medium">{firstItem?.title}</h4>
+                        <p className="text-sm text-gray-600">
+                          Buyer: {buyerName}{" "}
+                          {buyerEmail && `• ${buyerEmail}`}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          ₹{order.amount} {order.currency} •{" "}
+                          {formatDate(order.createdAt)}
+                        </p>
+                      </div>
 
-        <span
-          className={`text-xs px-2 py-0.5 rounded-full ${
-            order.status === "created"
-              ? "bg-yellow-100 text-yellow-700"
-              : order.status === "shipped"
-              ? "bg-blue-100 text-blue-700"
-              : order.status === "delivered"
-              ? "bg-green-100 text-green-700"
-              : "bg-gray-100 text-gray-700"
-          }`}
-        >
-          {order.status}
-        </span>
-      </Link>
-    );
-  })}
-</div>
-
+                      <span
+                        className={`text-xs px-2 py-0.5 rounded-full ${
+                          order.status === "created"
+                            ? "bg-yellow-100 text-yellow-700"
+                            : order.status === "shipped"
+                            ? "bg-blue-100 text-blue-700"
+                            : order.status === "delivered"
+                            ? "bg-green-100 text-green-700"
+                            : "bg-gray-100 text-gray-700"
+                        }`}
+                      >
+                        {order.status}
+                      </span>
+                    </Link>
+                  );
+                })}
+              </div>
             ) : (
               <div className="text-center py-8">
                 <ShoppingBag className="h-12 w-12 text-gray-300 mx-auto mb-4" />
                 <p className="text-gray-500">No orders yet</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Recent Appointments */}
+        <Card className="rounded-2xl border-0 shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="flex items-center">
+              <Calendar className="mr-2 h-5 w-5" />
+              Recent Appointments
+            </CardTitle>
+            <Link href="/artisan/appointments">
+              <Button variant="outline" size="sm" className="rounded-full">
+                View All
+              </Button>
+            </Link>
+          </CardHeader>
+          <CardContent>
+            {appointmentsData?.orders?.length > 0 ? (
+              <div className="space-y-4">
+                {appointmentsData.orders.map((appt) => {
+                  const firstItem = appt.items?.[0];
+                  const customerName = appt.buyer?.name || "Unknown";
+                  const customerEmail = appt.buyer?.email || "";
+
+                  return (
+                    <Link
+                      key={appt.id}
+                      href={`../appointments/${appt.id}`}
+                      className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition"
+                    >
+                      <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-primary text-white flex items-center justify-center font-semibold">
+  {firstItem.image ? (
+    <img
+      src={firstItem.image}
+      alt={customerName}
+      className="w-full h-full object-cover"
+    />
+  ) : (
+    customerName.charAt(0)
+  )}
+</div>
+
+                      <div className="flex-1">
+                        <h4 className="font-medium">
+                          {firstItem.title || "Service"}
+                        </h4>
+                        <p className="text-sm text-gray-600">
+                          {customerName}{" "}
+                          {customerEmail && `• ${customerEmail}`}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          Appointment Date: {formatDate(appt.bookingDate)}
+                        </p>
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <Calendar className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                <p className="text-gray-500">No appointments yet</p>
               </div>
             )}
           </CardContent>
@@ -218,28 +368,30 @@ function DashboardContent() {
             <Link href="/artisan/products/new">
               <Button
                 variant="outline"
-                className="w-full justify-start rounded-full"
+                className="w-full justify-start rounded-full flex items-center"
               >
-                <Plus className="mr-2 h-4 w-4" />
-                Add New Product
+                <Plus className="mr-2 h-5 w-5 flex-shrink-0" />
+                <span>Add New Product</span>
               </Button>
             </Link>
+
             <Link href="/artisan/products">
               <Button
                 variant="outline"
-                className="w-full justify-start rounded-full"
+                className="w-full justify-start rounded-full flex items-center"
               >
-                <Package className="mr-2 h-4 w-4" />
-                Manage Products
+                <Package className="mr-2 h-5 w-5 flex-shrink-0" />
+                <span>Manage Products</span>
               </Button>
             </Link>
+
             <Link href="/artisan/orders">
               <Button
                 variant="outline"
-                className="w-full justify-start rounded-full"
+                className="w-full justify-start rounded-full flex items-center"
               >
-                <ShoppingBag className="mr-2 h-4 w-4" />
-                View Orders
+                <ShoppingBag className="mr-2 h-5 w-5 flex-shrink-0" />
+                <span>View Orders</span>
               </Button>
             </Link>
           </CardContent>

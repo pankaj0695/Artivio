@@ -59,7 +59,55 @@ export const updateProduct = async (productId, productData) => {
     return { error: error.message };
   }
 };
+// ✅ existing generic function
+// ✅ Main function: fetch products/services by artisan
+export const getProductsByArtisan = async (userId, type = null) => {
+  try {
+    let q = collection(db, "products");
 
+    // Always filter by artisanId
+    q = query(q, where("artisanId", "==", userId));
+
+    // Optionally filter by type (product/service)
+    if (type) {
+      q = query(q, where("type", "==", type));
+    }
+
+    const snapshot = await getDocs(q);
+    const products = snapshot.docs.map((doc) => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        type: data?.type || "product",
+        ...data,
+      };
+    });
+
+    return { products, error: null };
+  } catch (error) {
+    return { products: [], error: error.message };
+  }
+};
+
+// ✅ Limited wrappers
+export const getArtisanProducts = async (userId, limitCount = 5) => {
+  const { products, error } = await getProductsByArtisan(userId, "product");
+  return { products: products.slice(0, limitCount), error };
+};
+
+export const getArtisanServices = async (userId, limitCount = 5) => {
+  const { products, error } = await getProductsByArtisan(userId, "service");
+  return { products: products.slice(0, limitCount), error };
+};
+
+// ✅ Fetch all products/services without limit
+export const getAllArtisanProducts = async (userId) => {
+  return await getProductsByArtisan(userId, "product");
+};
+
+export const getAllArtisanServices = async (userId) => {
+  return await getProductsByArtisan(userId, "service");
+};
 export const getProducts = async (filters = {}) => {
   console.log("Fetching products with filters:", filters);
   try {
@@ -212,10 +260,11 @@ export const getArtisanStats = async (artisanId) => {
 };
 export const getArtisanOrders = async (artisanId, limitCount = 5) => {
   try {
-    // 1. Get artisan products
+    // 1. Get artisan products (only those with type = product)
     const productsQuery = query(
       collection(db, "products"),
-      where("artisanId", "==", artisanId)
+      where("artisanId", "==", artisanId),
+      where("type", "==", "product") // ✅ filter only product type
     );
     const productsSnapshot = await getDocs(productsQuery);
     const artisanProductIds = productsSnapshot.docs.map((doc) => doc.id);
@@ -261,6 +310,109 @@ export const getArtisanOrders = async (artisanId, limitCount = 5) => {
     return { orders: [], error: error.message };
   }
 };
+
+export const getArtisanAppointments = async (artisanId, limitCount = 5) => {
+  try {
+    // 1. Get artisan's service products
+    const servicesQuery = query(
+      collection(db, "products"),
+      where("artisanId", "==", artisanId),
+      where("type", "==", "service")
+    );
+    const servicesSnapshot = await getDocs(servicesQuery);
+    const serviceIds = servicesSnapshot.docs.map((doc) => doc.id);
+
+    if (serviceIds.length === 0) {
+      return { orders: [], error: null }; // no service products
+    }
+
+    // 2. Get all orders
+    const ordersQuery = query(collection(db, "orders"));
+    const ordersSnapshot = await getDocs(ordersQuery);
+
+    // 3. Filter orders that contain artisan's service products + attach buyer info
+    const artisanOrders = await Promise.all(
+      ordersSnapshot.docs.map(async (docSnap) => {
+        const order = { id: docSnap.id, ...docSnap.data() };
+
+        const hasArtisanService = order.items?.some((item) =>
+          serviceIds.includes(item.productId)
+        );
+
+        if (!hasArtisanService) return null;
+
+        // fetch buyer details
+        let buyer = null;
+        if (order.userId) {
+          const userDoc = await getDoc(doc(db, "users", order.userId));
+          if (userDoc.exists()) {
+            buyer = { id: userDoc.id, ...userDoc.data() };
+          }
+        }
+
+        return { ...order, buyer };
+      })
+    );
+
+    // apply limitCount
+    const limitedOrders = artisanOrders.filter(Boolean).slice(0, limitCount);
+
+    return { orders: limitedOrders, error: null };
+  } catch (error) {
+    return { orders: [], error: error.message };
+  }
+};
+
+
+export const getAllArtisanAppointments = async (artisanId) => {
+  try {
+    // 1. Get artisan's service products
+    const servicesQuery = query(
+      collection(db, "products"),
+      where("artisanId", "==", artisanId),
+      where("type", "==", "service")
+    );
+    const servicesSnapshot = await getDocs(servicesQuery);
+    const serviceIds = servicesSnapshot.docs.map((doc) => doc.id);
+
+    if (serviceIds.length === 0) {
+      return { orders: [], error: null }; // no service products
+    }
+
+    // 2. Get all orders
+    const ordersQuery = query(collection(db, "orders"));
+    const ordersSnapshot = await getDocs(ordersQuery);
+
+    // 3. Filter orders that contain artisan's service products + attach buyer info
+    const artisanOrders = await Promise.all(
+      ordersSnapshot.docs.map(async (docSnap) => {
+        const order = { id: docSnap.id, ...docSnap.data() };
+
+        const hasArtisanService = order.items?.some((item) =>
+          serviceIds.includes(item.productId)
+        );
+
+        if (!hasArtisanService) return null;
+
+        // fetch buyer details
+        let buyer = null;
+        if (order.userId) {
+          const userDoc = await getDoc(doc(db, "users", order.userId));
+          if (userDoc.exists()) {
+            buyer = { id: userDoc.id, ...userDoc.data() };
+          }
+        }
+
+        return { ...order, buyer };
+      })
+    );
+
+    return { orders: artisanOrders.filter(Boolean), error: null };
+  } catch (error) {
+    return { orders: [], error: error.message };
+  }
+};
+
 
 export const getUserAddresses = async (userId) => {
   try {
@@ -342,10 +494,11 @@ export async function listArtisans(count = 50) {
 
 export const getAllArtisanOrders = async (artisanId) => {
   try {
-    // 1. Get artisan products
+    // 1. Get artisan products (only those with type = product)
     const productsQuery = query(
       collection(db, "products"),
-      where("artisanId", "==", artisanId)
+      where("artisanId", "==", artisanId),
+      where("type", "==", "product") // ✅ filter only product type
     );
     const productsSnapshot = await getDocs(productsQuery);
     const artisanProductIds = productsSnapshot.docs.map((doc) => doc.id);
@@ -390,7 +543,6 @@ export const getAllArtisanOrders = async (artisanId) => {
     return { orders: [], error: error.message };
   }
 };
-
 export const updateOrderStatus = async (orderId, status) => {
   try {
     const orderRef = doc(db, "orders", orderId);

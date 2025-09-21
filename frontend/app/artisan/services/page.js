@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { getProducts, getAllArtisanProducts } from "@/lib/firestore";
+import { getProducts, getAllArtisanProducts,getAllArtisanServices } from "@/lib/firestore";
 import { useAuth } from "@/hooks/use-auth";
 import Link from "next/link";
 import Image from "next/image";
@@ -19,7 +19,7 @@ function ProductsContent() {
 
   const { data: productsData, isLoading } = useQuery({
     queryKey: ["artisan-products", user?.uid],
-    queryFn: () => getAllArtisanProducts(user.uid),
+    queryFn: () => getAllArtisanServices(user.uid),
     enabled: !!user,
   });
 
@@ -32,13 +32,13 @@ function ProductsContent() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-4xl font-bold text-gray-900">My Products</h1>
-          <p className="text-gray-600 mt-2">Manage your product catalog</p>
+          <h1 className="text-4xl font-bold text-gray-900">My Services</h1>
+          <p className="text-gray-600 mt-2">Manage your service catalog</p>
         </div>
         <Link href="/artisan/products/new">
   <Button className="rounded-full flex items-center justify-center gap-2">
     <Plus className="h-4 w-4" />
-    Add Product
+    Add Services
   </Button>
 </Link>
 
@@ -48,7 +48,7 @@ function ProductsContent() {
         <div className="relative max-w-md">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
           <Input
-            placeholder="Search products..."
+            placeholder="Search services..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10 rounded-full"

@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
-import { getAllArtisanOrders, updateOrderStatus } from "@/lib/firestore";
+import { getAllArtisanOrders, updateOrderStatus,getAllArtisanAppointments } from "@/lib/firestore";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import {
   Select,
@@ -20,7 +20,7 @@ export default function ArtisanOrdersPage() {
   // Fetch artisan orders
   const { data: ordersData, isLoading } = useQuery({
     queryKey: ["artisan-orders", user?.uid],
-    queryFn: () => getAllArtisanOrders(user.uid),
+    queryFn: () =>getAllArtisanAppointments(user.uid),
     enabled: !!user,
   });
 
@@ -120,7 +120,7 @@ export default function ArtisanOrdersPage() {
                     <div>
                       <p className="font-medium">{item.title}</p>
                       <p className="text-sm text-gray-600">
-                        ₹{item.price} • Qty: {item.quantity}
+                        ₹{item.price} • Booking Date: {formatDateString(order.bookingDate)}
                       </p>
                     </div>
                   </div>

@@ -265,26 +265,47 @@ export default function ProductsPage() {
               </div>
 
               {/* Actions */}
-              <div className="flex gap-2">
-                <Link
-                  href={`/products/${product.id}`}
-                  className="flex-1"
-                >
-                  <Button
-                    variant="outline"
-                    className="w-full rounded-full text-xs flex items-center justify-center gap-2 py-2.5"
-                  >
-                    <Eye className="h-4 w-4" /> View
-                  </Button>
-                </Link>
-                <Button
-                  onClick={() => handleToggleCart(product)}
-                  className="flex-1 rounded-full text-xs flex items-center justify-center gap-2 py-2.5 bg-primary text-white hover:bg-primary/90"
-                >
-                  <ShoppingCart className="h-4 w-4" />{" "}
-                  {isInCart ? "Remove" : "Add"}
-                </Button>
-              </div>
+              {/* Actions */}
+<div className="flex gap-2">
+  <Link
+    href={`/products/${product.id}`}
+    className="flex-1"
+  >
+    <Button
+      variant="outline"
+      className="w-full rounded-full text-xs flex items-center justify-center gap-2 py-2.5"
+    >
+      <Eye className="h-4 w-4" /> View
+    </Button>
+  </Link>
+
+  {product.type === "service" ? (
+    <Link
+      href={{
+        pathname: "/checkout/appointment",
+        query: {
+          productId: product.id,
+          title: product.title,
+          price: product.price,
+          image: product.images?.[0] || "",
+        },
+      }}
+      className="flex-1"
+    >
+      <Button className="w-full rounded-full text-xs flex items-center justify-center gap-2 py-2.5 bg-primary text-white hover:bg-primary/90">
+        Book Appointment
+      </Button>
+    </Link>
+  ) : (
+    <Button
+      onClick={() => handleToggleCart(product)}
+      className="flex-1 rounded-full text-xs flex items-center justify-center gap-2 py-2.5 bg-primary text-white hover:bg-primary/90"
+    >
+      <ShoppingCart className="h-4 w-4" /> {isInCart ? "Remove" : "Add"}
+    </Button>
+  )}
+</div>
+
             </CardContent>
           </Card>
         );
