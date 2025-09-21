@@ -18,6 +18,7 @@ export class BlockchainService {
     };
 
      const tokenURI = await this.uploadMetadata(metadata);
+     console.log(productData.id);
 
       const response = await fetch(`${BLOCKCHAIN_API_URL}/api/blockchain/mint-coa`, {
         method: 'POST',
@@ -29,7 +30,8 @@ export class BlockchainService {
         artisanId: productData.artisanId,
         tokenURI: tokenURI,
         royaltyBps: 500 ,
-        walletAddress: productData.artisanWallet  
+        walletAddress: productData.artisanWallet,
+        productId: productData.id 
         })
       });
 
@@ -44,7 +46,7 @@ export class BlockchainService {
         tokenId: result.tokenId,
         txHash: result.txHash,
         ipfsHash: tokenURI,
-        blockNumber: result.blockNumber
+        blockNumber: result.blockNumber,
       };
     } catch (error) {
       console.error('Blockchain minting error:', error);

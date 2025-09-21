@@ -251,7 +251,7 @@ export function ProductForm({ product, isEdit = false }) {
 
       if (nftResult.success) {
         // Step 4: Update product with NFT data
-        await updateProductWithNFT(productRef.id, nftResult);
+        // await updateProductWithNFT(productRef.id, nftResult);
 
         setNftStatus({
           type: "success",

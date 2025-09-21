@@ -36,14 +36,14 @@ export async function updateUserProfile(uid, data) {
 // Products
 export const createProduct = async (productData) => {
   try {
-    if (productData?.type == "product"){
-    productData.nftTokenId= ""
-    productData.nftTxHash= ""
-    productData.nftIpfsHash=""
-    productData.nftMinted= false
-    productData.nftMintedAt= ""
-    productData.nftError=""
-    }
+    // if (productData?.type == "product"){
+    // productData.nftTokenId= ""
+    // productData.nftTxHash= ""
+    // productData.nftIpfsHash=""
+    // productData.nftMinted= false
+    // productData.nftMintedAt= ""
+    // productData.nftError=""
+    // }
 
     const docRef = await addDoc(collection(db, "products"), {
       ...productData,
