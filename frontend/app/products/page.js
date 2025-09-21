@@ -19,9 +19,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { useCartStore } from "@/lib/store";
 import { toast } from "sonner";
-import { getArtisanPublic } from "@/lib/firestore"; 
+import { getArtisanPublic } from "@/lib/firestore";
 import { useEffect } from "react";
-
 
 const categories = [
   { value: "all", label: "All Categories" },
@@ -46,7 +45,6 @@ export default function ProductsPage() {
   const [listingType, setListingType] = useState("all");
 
   const [artisansMap, setArtisansMap] = useState({});
-  
 
   const { data: productsData, isLoading } = useQuery({
     queryKey: ["products", selectedCategory],
@@ -57,22 +55,22 @@ export default function ProductsPage() {
       }),
   });
   useEffect(() => {
-  if (!productsData?.products) return;
+    if (!productsData?.products) return;
 
-  (async () => {
-    const map = {};
-    for (const product of productsData.products) {
-      if (!map[product.artisanId]) {
-        const artisanProfile = await getArtisanPublic(product.artisanId);
-        map[product.artisanId] = {
-          name: artisanProfile?.displayName || "Unknown Artisan",
-          avatar: artisanProfile?.avatar || "/default-avatar.png",
-        };
+    (async () => {
+      const map = {};
+      for (const product of productsData.products) {
+        if (!map[product.artisanId]) {
+          const artisanProfile = await getArtisanPublic(product.artisanId);
+          map[product.artisanId] = {
+            name: artisanProfile?.displayName || "Unknown Artisan",
+            avatar: artisanProfile?.avatar || "/default-avatar.png",
+          };
+        }
       }
-    }
-    setArtisansMap(map);
-  })();
-}, [productsData]);
+      setArtisansMap(map);
+    })();
+  }, [productsData]);
 
   const filteredAndSortedProducts =
     productsData?.products
@@ -121,7 +119,6 @@ export default function ProductsPage() {
 
       {/* Container for all three sections */}
       <div className="flex justify-center gap-8">
-
         {/* Left Sidebar Filters */}
         <aside className="lg:w-64 flex-shrink-0">
           <div className="sticky top-24 space-y-6 bg-white p-6 rounded-2xl shadow-sm border">
@@ -191,128 +188,142 @@ export default function ProductsPage() {
           </div>
         </aside>
 
-  
-<div className="flex-1 w-full flex justify-center">
-  {isLoading ? (
-    <div className="flex flex-wrap justify-center gap-6">
-      {Array(3)
-        .fill(0)
-        .map((_, i) => (
-          <div
-            key={i}
-            className="bg-gray-200 animate-pulse rounded-xl h-52 w-[32rem]" // increased height and width
-          />
-        ))}
-    </div>
-  ) : (
-    <div className="flex flex-col items-center gap-6 w-full max-w-[32rem]"> {/* increased max width */}
-      {filteredAndSortedProducts.map((product) => {
-        const isInCart = items.some((item) => item.id === product.id);
-        return (
-          <Card
-            key={product.id}
-            className="rounded-xl shadow-md hover:shadow-lg transition-all duration-200 border border-gray-200 w-[32rem]" // increased width
-          >
-            <CardContent className="p-6 space-y-4">
-              {/* Artisan Info */}
-<div className="flex items-center gap-3 mb-3">
-  <Link href={`/artisan/${product.artisanId}`} className="flex items-center gap-2 cursor-pointer">
-  <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-200 flex-shrink-0 border-2 border-primary">
-    <Image
-      src={artisansMap[product.artisanId]?.avatar || "/default-avatar.png"}
-      alt={artisansMap[product.artisanId]?.name || "Unknown Artisan"}
-      width={40}
-      height={40}
-      className="object-cover"
-    />
-  </div>
-  <div className="flex flex-col">
-    <span className="font-semibold text-gray-900 text-sm">
-      {artisansMap[product.artisanId]?.name || "Unknown Artisan"}
-    </span>
-    <span className="text-xs text-gray-500">Seller</span>
-  </div>
-</Link>
-</div>
+        <div className="flex-1 w-full flex justify-center">
+          {isLoading ? (
+            <div className="flex flex-wrap justify-center gap-6">
+              {Array(3)
+                .fill(0)
+                .map((_, i) => (
+                  <div
+                    key={i}
+                    className="bg-gray-200 animate-pulse rounded-xl h-52 w-[32rem]" // increased height and width
+                  />
+                ))}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center gap-6 w-full max-w-[32rem]">
+              {" "}
+              {/* increased max width */}
+              {filteredAndSortedProducts.map((product) => {
+                const isInCart = items.some((item) => item.id === product.id);
+                return (
+                  <Card
+                    key={product.id}
+                    className="rounded-xl shadow-md hover:shadow-lg transition-all duration-200 border border-gray-200 w-[32rem]" // increased width
+                  >
+                    <CardContent className="p-6 space-y-4">
+                      {/* Artisan Info */}
+                      <div className="flex items-center gap-3 mb-3">
+                        <Link
+                          href={`/artisan/${product.artisanId}`}
+                          className="flex items-center gap-2 cursor-pointer"
+                        >
+                          <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-200 flex-shrink-0 border-2 border-primary">
+                            <Image
+                              src={
+                                artisansMap[product.artisanId]?.avatar ||
+                                "/default-avatar.png"
+                              }
+                              alt={
+                                artisansMap[product.artisanId]?.name ||
+                                "Unknown Artisan"
+                              }
+                              width={40}
+                              height={40}
+                              className="object-cover"
+                            />
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="font-semibold text-gray-900 text-sm">
+                              {artisansMap[product.artisanId]?.name ||
+                                "Unknown Artisan"}
+                            </span>
+                            <span className="text-xs text-gray-500">
+                              Seller
+                            </span>
+                          </div>
+                        </Link>
+                      </div>
 
+                      {/* Product Image */}
+                      <div className="relative w-full aspect-[1/0.9] rounded-md overflow-hidden">
+                        {" "}
+                        {/* slightly taller image */}
+                        <Image
+                          src={product.images?.[0] || "/placeholder.png"}
+                          alt={product.title}
+                          fill
+                          className="object-cover"
+                        />
+                        <div className="absolute top-2 left-2">
+                          <Badge className="text-xs px-2 py-1">
+                            {product.type || "Product"}
+                          </Badge>
+                        </div>
+                      </div>
 
-              {/* Product Image */}
-              <div className="relative w-full aspect-[1/0.9] rounded-md overflow-hidden"> {/* slightly taller image */}
-                <Image
-                  src={product.images?.[0] || "/placeholder.png"}
-                  alt={product.title}
-                  fill
-                  className="object-cover"
-                />
-                <div className="absolute top-2 left-2">
-                  <Badge className="text-xs px-2 py-1">
-                    {product.type || "Product"}
-                  </Badge>
-                </div>
-              </div>
+                      {/* Product Info */}
+                      <div className="space-y-1">
+                        <h3 className="font-semibold text-gray-900 text-base line-clamp-2">
+                          {product.title}
+                        </h3>
+                        <p className="text-gray-600 text-xs line-clamp-3">
+                          {product.description}
+                        </p>
+                        <div className="font-bold text-sm text-primary">
+                          ₹{product.price}
+                        </div>
+                      </div>
 
-              {/* Product Info */}
-              <div className="space-y-1">
-                <h3 className="font-semibold text-gray-900 text-base line-clamp-2">
-                  {product.title}
-                </h3>
-                <p className="text-gray-600 text-xs line-clamp-3">
-                  {product.description}
-                </p>
-                <div className="font-bold text-sm text-primary">
-                  ₹{product.price}
-                </div>
-              </div>
+                      {/* Actions */}
+                      {/* Actions */}
+                      <div className="flex gap-2">
+                        <Link
+                          href={`/products/${product.id}`}
+                          className="flex-1"
+                        >
+                          <Button
+                            variant="outline"
+                            className="w-full rounded-full text-xs flex items-center justify-center gap-2 py-2.5"
+                          >
+                            <Eye className="h-4 w-4" /> View
+                          </Button>
+                        </Link>
 
-              {/* Actions */}
-              {/* Actions */}
-<div className="flex gap-2">
-  <Link
-    href={`/products/${product.id}`}
-    className="flex-1"
-  >
-    <Button
-      variant="outline"
-      className="w-full rounded-full text-xs flex items-center justify-center gap-2 py-2.5"
-    >
-      <Eye className="h-4 w-4" /> View
-    </Button>
-  </Link>
-
-  {product.type === "service" ? (
-    <Link
-      href={{
-        pathname: "/checkout/appointment",
-        query: {
-          productId: product.id,
-          title: product.title,
-          price: product.price,
-          image: product.images?.[0] || "",
-        },
-      }}
-      className="flex-1"
-    >
-      <Button className="w-full rounded-full text-xs flex items-center justify-center gap-2 py-2.5 bg-primary text-white hover:bg-primary/90">
-        Book Appointment
-      </Button>
-    </Link>
-  ) : (
-    <Button
-      onClick={() => handleToggleCart(product)}
-      className="flex-1 rounded-full text-xs flex items-center justify-center gap-2 py-2.5 bg-primary text-white hover:bg-primary/90"
-    >
-      <ShoppingCart className="h-4 w-4" /> {isInCart ? "Remove" : "Add"}
-    </Button>
-  )}
-</div>
-
-            </CardContent>
-          </Card>
-        );
-      })}
-    </div>
-  )}
-</div>
+                        {product.type === "service" ? (
+                          <Link
+                            href={{
+                              pathname: "/checkout/appointment",
+                              query: {
+                                productId: product.id,
+                                title: product.title,
+                                price: product.price,
+                                image: product.images?.[0] || "",
+                              },
+                            }}
+                            className="flex-1"
+                          >
+                            <Button className="w-full rounded-full text-xs flex items-center justify-center gap-2 py-2.5 bg-primary text-white hover:bg-primary/90">
+                              Book Appointment
+                            </Button>
+                          </Link>
+                        ) : (
+                          <Button
+                            onClick={() => handleToggleCart(product)}
+                            className="flex-1 rounded-full text-xs flex items-center justify-center gap-2 py-2.5 bg-primary text-white hover:bg-primary/90"
+                          >
+                            <ShoppingCart className="h-4 w-4" />{" "}
+                            {isInCart ? "Remove" : "Add"}
+                          </Button>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
+        </div>
 
         {/* Right News Sidebar */}
         <aside className="lg:w-64 flex-shrink-0">

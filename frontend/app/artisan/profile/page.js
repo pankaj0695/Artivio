@@ -9,6 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 import { getArtisanPublic, upsertArtisanPublic } from "@/lib/firestore";
+import {uploadImageToCloudinary} from "@/lib/storage";
 
 export default function ArtisanProfileEditorPage() {
   const router = useRouter();
@@ -192,17 +193,61 @@ export default function ArtisanProfileEditorPage() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Input
-              placeholder="Avatar URL"
-              value={form.avatar}
-              onChange={(e) => setForm((f) => ({ ...f, avatar: e.target.value }))}
-            />
-            <Input
-              placeholder="Cover image URL"
-              value={form.coverImage}
-              onChange={(e) => setForm((f) => ({ ...f, coverImage: e.target.value }))}
-            />
-          </div>
+  <div className="space-y-2">
+    <label className="text-sm font-medium">Avatar</label>
+    {form.avatar && (
+      <img
+        src={form.avatar}
+        alt="Avatar preview"
+        className="h-20 w-20 object-cover rounded-full"
+      />
+    )}
+    <Input
+      type="file"
+      accept="image/*"
+      onChange={async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        toast.info("Uploading avatar...");
+        const { url, error } = await uploadImageToCloudinary(file, user?.uid, { tags: ["avatar"] });
+        if (error) {
+          toast.error("Avatar upload failed: " + error);
+        } else {
+          setForm((f) => ({ ...f, avatar: url }));
+          toast.success("Avatar uploaded");
+        }
+      }}
+    />
+  </div>
+
+  <div className="space-y-2">
+    <label className="text-sm font-medium">Cover Image</label>
+    {form.coverImage && (
+      <img
+        src={form.coverImage}
+        alt="Cover preview"
+        className="h-24 w-full object-cover rounded-md"
+      />
+    )}
+    <Input
+      type="file"
+      accept="image/*"
+      onChange={async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        toast.info("Uploading cover image...");
+        const { url, error } = await uploadImageToCloudinary(file, user?.uid, { tags: ["cover"] });
+        if (error) {
+          toast.error("Cover upload failed: " + error);
+        } else {
+          setForm((f) => ({ ...f, coverImage: url }));
+          toast.success("Cover uploaded");
+        }
+      }}
+    />
+  </div>
+</div>
+
 
           <div className="flex gap-3 justify-end pt-2">
             <Button variant="outline" onClick={save} disabled={saving}>

@@ -3,8 +3,9 @@ import base64
 import tempfile
 import time
 import vertexai
-from vertexai.generative_models import GenerativeModel, GenerationConfig
+from vertexai.generative_models import GenerativeModel, GenerationConfig 
 from ..config import Config
+
 
 
 class VertexTextService:
@@ -14,24 +15,25 @@ class VertexTextService:
     def __init__(self):
         """Initializes the VertexTextService."""
         cfg = Config()
-        self.project_id = cfg.GOOGLE_PROJECT_ID or os.getenv("GOOGLE_PROJECT_ID")
+        self.project_id = cfg.GOOGLE_PROJECT_ID or os.getenv("GOOGLE_PROJECT_ID") or "massive-graph-465922-i8"
         self.location = (cfg.GOOGLE_LOCATION or os.getenv("GOOGLE_LOCATION") or "us-central1")
         self._model = None
         self._init_error = None
         self._config = cfg
-
+        
         try:
             self._initialize_vertex()
         except Exception as e:
             self._init_error = e
             print(
-                f"Warning: Vertex AI initialization failed. Text generation will not work. Error: {e}"
+                f"Wahdrning: Vertex AI initialization failed. Text generation will not work. Error: {e}"
             )
 
     def _setup_credentials(self) -> None:
         """Set up ADC using base64 SA key if GOOGLE_APPLICATION_CREDENTIALS is not set."""
         if os.getenv("GOOGLE_APPLICATION_CREDENTIALS"):
             return
+        # creds_b64 = getattr(self._config, "GOOGLE_CREDENTIALS_JSON_BASE64", None)
         creds_b64 = getattr(self._config, "GOOGLE_CREDENTIALS_JSON_BASE64", None)
         if not creds_b64:
             # Fall back to ADC (gcloud auth application-default login)
@@ -57,7 +59,7 @@ class VertexTextService:
         vertexai.init(project=self.project_id, location=self.location)
 
     def _get_model(self):
-        """Lazy-loads the Gemini model (gemini-1.5-flash)."""
+        """Lazy-loads the Gemini model (gemini-1.5-pro)."""
         if self._init_error:
             raise RuntimeError(
                 f"Vertex AI not initialized: {self._init_error}"
@@ -66,7 +68,7 @@ class VertexTextService:
         if self._model is None:
             # Prefer the latest flash model; allow region-specific suffix if needed
             # Using -001 suffix for stability; adjust if your project exposes plain name
-            self._model = GenerativeModel("gemini-1.5-flash-001")
+            self._model = GenerativeModel("gemini-1.5-pro")
         return self._model
 
     def _call_model(
