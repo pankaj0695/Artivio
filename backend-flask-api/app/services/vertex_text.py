@@ -56,7 +56,10 @@ class VertexTextService:
 
     def _initialize_vertex(self):
         """Initializes the Vertex AI client if not already done."""
-        self._setup_credentials()
+        on_cloud_run = bool(os.getenv("K_SERVICE")) and not os.getenv("FORCE_LOCAL_CREDS")
+        # If GOOGLE_APPLICATION_CREDENTIALS already set, also skip.
+        if not on_cloud_run and not os.getenv("GOOGLE_APPLICATION_CREDENTIALS"):
+            self._setup_credentials()
         if not self.project_id:
             raise ValueError(
                 "Missing GOOGLE_PROJECT_ID environment variable for Vertex AI."

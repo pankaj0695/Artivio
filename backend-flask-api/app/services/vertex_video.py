@@ -55,7 +55,12 @@ class VertexVideoService:
                 f"Underlying import error: {_GENAI_IMPORT_ERROR}"
             )
         try:
-            self._setup_credentials()
+            # Skip explicit credential file creation on Cloud Run (ADC provided by metadata server).
+            # Cloud Run sets K_SERVICE (and often K_REVISION). Allow forcing local style by setting FORCE_LOCAL_CREDS=1.
+            on_cloud_run = bool(os.getenv("K_SERVICE")) and not os.getenv("FORCE_LOCAL_CREDS")
+            # If GOOGLE_APPLICATION_CREDENTIALS already set, also skip.
+            if not on_cloud_run and not os.getenv("GOOGLE_APPLICATION_CREDENTIALS"):
+                self._setup_credentials()
             self._client = genai.Client(vertexai=True, project=self.project, location=self.location)
         except Exception as exc:
             self._init_error = exc
