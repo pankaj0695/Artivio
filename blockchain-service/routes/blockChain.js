@@ -4,6 +4,9 @@ const BlockchainService = require('../services/blockChainService');
 const IPFSService = require('../services/ipfsService');
 const DBService = require('../services/dbService');
 const firebaseConfig = require('../config/firebase');
+const dotenv = require('dotenv');
+dotenv.config();
+
 
 const router = express.Router();
 // Initialize services
@@ -21,7 +24,8 @@ const mintCoASchema = Joi.object({
   sku: Joi.number().integer().positive().required(),
   artisanId: Joi.string().required(),
   tokenURI: Joi.string().uri().required(),
-  royaltyBps: Joi.number().integer().min(0).max(10000).default(500)
+  royaltyBps: Joi.number().integer().min(0).max(10000).default(500),
+  walletAddress: Joi.string().required()
 });
 
 const mintRightsSchema = Joi.object({
@@ -35,7 +39,7 @@ const mintRightsSchema = Joi.object({
 const uploadMetadataSchema = Joi.object({
   name: Joi.string().required(),
   description: Joi.string().required(),
-  imageCID: Joi.string().required(),
+  imageCID: Joi.string(),
   attributes: Joi.array().items(Joi.object({
     trait_type: Joi.string().required(),
     value: Joi.string().required()
@@ -58,6 +62,7 @@ router.post('/mint-coa', async (req, res) => {
       sku: value.sku,
       artisanAddress: value.artisanId,
       tokenURI: value.tokenURI,
+      walletAddress: value.walletAddress,
       royaltyBps: value.royaltyBps
     });
 

@@ -37,3 +37,28 @@ REPORT_GAS=true npx hardhat test
 npx hardhat node
 npx hardhat ignition deploy ./ignition/modules/Lock.js -->
 ```
+
+# Artisan NFT Blockchain Service API
+
+Base URL: https://artisan-nft-api.onrender.com
+
+## Endpoints:
+
+### POST /api/mint-coa
+Mint Certificate of Authenticity for artisan products
+- **Body**: `{ sku, artisanAddress, metadata }`
+- **Returns**: `{ tokenId, txHash, ipfsHash }`
+
+### POST /api/mint-rights  
+Mint Rights NFT for licensing
+- **Body**: `{ sku, artisanAddress, tokenURI, amount }`
+- **Returns**: `{ tokenId, amount, txHash }`
+
+### GET /api/verify/:tokenId
+Verify NFT authenticity
+- **Returns**: `{ valid, tokenInfo, royalty }`
+
+### POST /api/upload-metadata
+Upload metadata to IPFS
+- **Body**: `{ name, description, image, attributes }`
+- **Returns**: `{ ipfsHash, url }`
