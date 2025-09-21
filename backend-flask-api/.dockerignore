@@ -1,0 +1,53 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg-info/
+.eggs/
+
+# Virtual environments
+.env
+.venv
+venv/
+ENV/
+
+# Version control
+.git
+.gitignore
+
+# OS / Editor
+.DS_Store
+*.swp
+.idea/
+.vscode/
+
+# Tests / artifacts
+htmlcov/
+.coverage*
+pytest_cache/
+
+# Logs & temp
+*.log
+/tmp/
+
+# Credentials (ensure you pass via env vars instead)
+vertex-ai-key.json
+*.pem
+*.key
+
+# Node / frontend stray
+node_modules/
+yarn.lock
+package-lock.json
+
+# Build caches
+pip-cache/
+__build__/
+build/
+dist/
+
+# Docker
+Dockerfile*
+.dockerignore
