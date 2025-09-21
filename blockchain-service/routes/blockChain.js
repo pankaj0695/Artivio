@@ -4,6 +4,9 @@ const BlockchainService = require('../services/blockChainService');
 const IPFSService = require('../services/ipfsService');
 const DBService = require('../services/dbService');
 const firebaseConfig = require('../config/firebase');
+const dotenv = require('dotenv');
+dotenv.config();
+
 
 const router = express.Router();
 // Initialize services

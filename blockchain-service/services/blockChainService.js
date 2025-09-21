@@ -3,7 +3,11 @@ const contractABI = require('../artifacts/contracts/ArtisanRights1155.sol/Artisa
 
 class BlockchainService {
   constructor(rpcUrl, privateKey, contractAddress) {
-    this.provider = new ethers.providers.JsonRpcProvider(rpcUrl);
+    this.provider = new ethers.providers.JsonRpcProvider(rpcUrl, {
+       name: 'polygon-amoy',
+       chainId: 80002,
+       ensAddress: null // Disable ENS
+    });
     this.wallet = new ethers.Wallet(privateKey, this.provider);
     this.contract = new ethers.Contract(contractAddress, contractABI.abi, this.wallet);
   }
@@ -138,6 +142,20 @@ class BlockchainService {
       };
     }
   }
+
+  // Add this method to BlockchainService
+async testConnection() {
+  try {
+    const network = await this.provider.getNetwork();
+    const balance = await this.wallet.getBalance();
+    console.log('Connected to network:', network.name, 'Chain ID:', network.chainId);
+    console.log('Wallet balance:', ethers.utils.formatEther(balance), 'MATIC');
+    return true;
+  } catch (error) {
+    console.error('Connection test failed:', error);
+    return false;
+  }
+}
 }
 
 module.exports = BlockchainService;
