@@ -113,9 +113,7 @@ export default function ProductsPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-      <h1 className="text-3xl font-bold text-gray-900 mb-6">
-        Artisan Marketplace
-      </h1>
+     
 
       {/* Container for all three sections */}
       <div className="flex justify-center gap-8">
@@ -283,8 +281,8 @@ export default function ProductsPage() {
                           className="flex-1"
                         >
                           <Button
-                            variant="outline"
-                            className="w-full rounded-full text-xs flex items-center justify-center gap-2 py-2.5"
+                            // removed variant="outline" to match primary buttons
+                            className="w-full rounded-full text-xs flex items-center justify-center gap-2 py-2.5 bg-primary text-white hover:bg-primary/90"
                           >
                             <Eye className="h-4 w-4" /> View
                           </Button>

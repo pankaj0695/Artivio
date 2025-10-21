@@ -46,23 +46,29 @@ export default function HomePage() {
   return (
     <div>
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100 overflow-hidden">
+      <section className="relative bg-gradient-to-br from-blue-50 via-slate-50 to-blue-100 overflow-hidden">
+        {/* decorative glow */}
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0">
+          <div className="absolute -top-24 -left-24 h-72 w-72 rounded-full bg-blue-300/30 blur-3xl" />
+          <div className="absolute -bottom-24 -right-24 h-72 w-72 rounded-full bg-cyan-300/30 blur-3xl" />
+        </div>
+
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-8">
               <div className="space-y-4">
-                <Badge className="bg-purple-100 text-purple-700 rounded-full px-4 py-2">
+                <Badge className="bg-blue-100 text-black rounded-full px-4 py-2">
                   ✨ AI-Powered Marketplace
                 </Badge>
-                <h1 className="text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">
+                <h1 className="text-5xl lg:text-6xl font-bold text-black leading-tight">
                   Discover
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-blue-600">
+                  <span className="text-black">
                     {" "}
                     Artisan{" "}
                   </span>
                   Crafts
                 </h1>
-                <p className="text-xl text-gray-600 leading-relaxed">
+                <p className="text-xl text-black leading-relaxed">
                   Connect with talented artisans and discover unique,
                   handcrafted pieces. Our AI-powered platform helps artisans
                   showcase their work beautifully.
@@ -71,34 +77,40 @@ export default function HomePage() {
 
               <div className="flex flex-col sm:flex-row gap-4">
                 <Link href="/products">
-                  <Button size="lg" className="rounded-full px-8 py-6 text-lg">
-                    Shop Now
-                    <ArrowRight className="ml-2 h-5 w-5" />
+                  <Button
+                    size="lg"
+  className="rounded-full px-8 py-6 text-lg bg-black text-white border border-black/20 shadow-sm 
+             hover:bg-white hover:text-black hover:shadow-lg hover:-translate-y-1 
+             active:translate-y-0 focus-visible:ring-2 focus-visible:ring-black/20 
+             transition-all duration-300 ease-in-out"              >
+                    Shop Now 
                   </Button>
                 </Link>
                 <Link href="/sign-up">
                   <Button
                     variant="outline"
                     size="lg"
-                    className="rounded-full px-8 py-6 text-lg"
-                  >
+className="rounded-full px-8 py-6 text-lg bg-black text-white border border-black/20 shadow-sm 
+             hover:bg-white hover:text-black hover:shadow-lg hover:-translate-y-1 
+             active:translate-y-0 focus-visible:ring-2 focus-visible:ring-black/20 
+             transition-all duration-300 ease-in-out"                  >
                     Become an Artisan
                   </Button>
                 </Link>
               </div>
 
-              <div className="flex items-center space-x-8 pt-4">
+              <div className="flex items-center space-x-8 pt-4 rounded-xl bg-white/60 supports-[backdrop-filter]:bg-white/50 backdrop-blur px-4 py-3 ring-1 ring-white/60 shadow-sm">
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-gray-900">500+</div>
-                  <div className="text-gray-600">Artisans</div>
+                  <div className="text-2xl font-bold text-black">500+</div>
+                  <div className="text-black">Artisans</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-gray-900">2,000+</div>
-                  <div className="text-gray-600">Products</div>
+                  <div className="text-2xl font-bold text-black">2,000+</div>
+                  <div className="text-black">Products</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-gray-900">4.9</div>
-                  <div className="text-gray-600">Rating</div>
+                  <div className="text-2xl font-bold text-black">4.9</div>
+                  <div className="text-black">Rating</div>
                 </div>
               </div>
             </div>
@@ -106,8 +118,8 @@ export default function HomePage() {
             <div className="relative">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-4">
-                  <Card className="rounded-2xl overflow-hidden shadow-lg">
-                    <div className="aspect-[3/4]">
+                  <Card className="rounded-2xl overflow-hidden shadow-md hover:shadow-lg transition-all border border-white/50 ring-1 ring-slate-200/70 hover:ring-slate-300">
+                    <div className="aspect-[4/5]">
                       <Image
                         src="https://images.pexels.com/photos/1047540/pexels-photo-1047540.jpeg"
                         alt="Artisan craft"
@@ -117,8 +129,8 @@ export default function HomePage() {
                       />
                     </div>
                   </Card>
-                  <Card className="rounded-2xl overflow-hidden shadow-lg">
-                    <div className="aspect-square">
+                  <Card className="rounded-2xl overflow-hidden shadow-md hover:shadow-lg transition-all border border-white/50 ring-1 ring-slate-200/70 hover:ring-slate-300">
+                    <div className="aspect-[4/5]">
                       <Image
                         src="https://images.pexels.com/photos/1040173/pexels-photo-1040173.jpeg"
                         alt="Artisan craft"
@@ -129,9 +141,9 @@ export default function HomePage() {
                     </div>
                   </Card>
                 </div>
-                <div className="space-y-4 pt-8">
-                  <Card className="rounded-2xl overflow-hidden shadow-lg">
-                    <div className="aspect-square">
+                <div className="space-y-4">
+                  <Card className="rounded-2xl overflow-hidden shadow-md hover:shadow-lg transition-all border border-white/50 ring-1 ring-slate-200/70 hover:ring-slate-300">
+                    <div className="aspect-[4/5]">
                       <Image
                         src="https://images.pexels.com/photos/1191531/pexels-photo-1191531.jpeg"
                         alt="Artisan craft"
@@ -141,8 +153,8 @@ export default function HomePage() {
                       />
                     </div>
                   </Card>
-                  <Card className="rounded-2xl overflow-hidden shadow-lg">
-                    <div className="aspect-[3/4]">
+                  <Card className="rounded-2xl overflow-hidden shadow-md hover:shadow-lg transition-all border border-white/50 ring-1 ring-slate-200/70 hover:ring-slate-300">
+                    <div className="aspect-[4/5]">
                       <Image
                         src="https://images.pexels.com/photos/1670977/pexels-photo-1670977.jpeg"
                         alt="Artisan craft"
@@ -159,31 +171,38 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* section divider */}
+      <div aria-hidden="true" className="w-full h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent" />
+
       {/* Categories Section */}
       <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">
-              Shop by Category
+
+            <h2 className="text-4xl font-bold text-black mb-3 tracking-tight">
+              Browse Categories
             </h2>
-            <p className="text-xl text-gray-600">
+            <p className="text-lg text-black max-w-2xl mx-auto">
               Explore our diverse collection of handcrafted items
             </p>
           </div>
 
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
             {categories.map((category) => (
               <Link
                 key={category.name}
                 href={`/products?category=${category.name.toLowerCase()}`}
+                className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 rounded-2xl"
               >
-                <Card className="group hover:shadow-lg transition-all duration-300 rounded-2xl border-0 shadow-sm">
+                <Card className="group rounded-2xl border border-slate-200/70 ring-1 ring-transparent hover:ring-primary/20 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all">
                   <CardContent className="p-8 text-center">
-                    <div className="text-4xl mb-4">{category.icon}</div>
-                    <h3 className="font-semibold text-lg mb-2 group-hover:text-primary transition-colors">
+                    <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-xl bg-gradient-to-br from-slate-50 to-slate-100 ring-1 ring-slate-200/70">
+                      <span className="text-2xl"> {category.icon} </span>
+                    </div>
+                    <h3 className="font-semibold text-lg mb-1 text-black">
                       {category.name}
                     </h3>
-                    <p className="text-gray-600 text-sm">{category.count}</p>
+                    <p className="text-black text-sm">{category.count}</p>
                   </CardContent>
                 </Card>
               </Link>
@@ -192,53 +211,59 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* section divider */}
+      <div aria-hidden="true" className="w-full h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent" />
+
       {/* Featured Products */}
       <section className="py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">
-              Featured Crafts
+ 
+            <h2 className="text-4xl font-bold text-black mb-3 tracking-tight">
+              Featured Products
             </h2>
-            <p className="text-xl text-gray-600">
-              Handpicked pieces from our talented artisans
+            <p className="text-lg text-black max-w-2xl mx-auto">
+              Discover handpicked pieces from our talented artisans
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {featuredProducts.map((product) => (
-              <Card
-                key={product.id}
-                className="group rounded-2xl border-0 shadow-sm hover:shadow-lg transition-all duration-300"
-              >
+              <Card key={product.id} className="group rounded-2xl border border-slate-200/70 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all">
                 <div className="aspect-square relative overflow-hidden rounded-t-2xl">
                   <Image
                     src={product.image}
                     alt={product.title}
                     fill
                     sizes="(max-width: 768px) 100vw, 33vw"
-                    className="object-cover group-hover:scale-105 transition-transform duration-300"
+                    className="object-cover transition-transform duration-300 group-hover:scale-105"
                   />
+                  {/* subtle overlay on hover */}
+                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                 </div>
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between mb-2">
-                    <Badge variant="secondary" className="rounded-full">
+                    <Badge variant="secondary" className="rounded-full text-black">
                       {product.artisan}
                     </Badge>
                     <div className="flex items-center">
                       <Star className="h-4 w-4 fill-yellow-400 text-yellow-400 mr-1" />
-                      <span className="text-sm font-medium">
+                      <span className="text-sm font-medium text-black">
                         {product.rating}
                       </span>
                     </div>
                   </div>
-                  <h3 className="font-semibold text-lg mb-2">
+                  <h3 className="font-semibold text-lg mb-2 min-h-[48px] text-black">
                     {product.title}
                   </h3>
                   <div className="flex items-center justify-between">
-                    <span className="text-2xl font-bold text-primary">
+                    <span className="text-2xl font-bold text-black">
                       ₹{product.price}
                     </span>
-                    <Button size="sm" className="rounded-full">
+                    <Button
+                      size="sm"
+                      className="rounded-full bg-white text-black border border-black/15 hover:bg-neutral-50 hover:-translate-y-0.5 active:translate-y-0 shadow-sm hover:shadow focus-visible:ring-2 focus-visible:ring-black/20 transition-all"
+                    >
                       View Details
                     </Button>
                   </div>
@@ -249,7 +274,11 @@ export default function HomePage() {
 
           <div className="text-center mt-12">
             <Link href="/products">
-              <Button size="lg" variant="outline" className="rounded-full px-8">
+              <Button
+                size="lg"
+                variant="outline"
+                className="rounded-full px-8 bg-white text-black border border-black/20 hover:bg-neutral-50 hover:-translate-y-0.5 active:translate-y-0 shadow-sm hover:shadow focus-visible:ring-2 focus-visible:ring-black/20 transition-all"
+              >
                 View All Products
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
@@ -258,46 +287,52 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Why Choose Us */}
+      {/* section divider */}
+      <div aria-hidden="true" className="w-full h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent" />
+
+      {/* Why Artivio */}
       <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">
-              Why Choose Artivio?
+
+            <h2 className="text-4xl font-bold text-black tracking-tight">
+              Why Artivio
             </h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="text-center">
-              <div className="bg-purple-100 rounded-2xl p-6 w-16 h-16 mx-auto mb-6 flex items-center justify-center">
-                <Palette className="h-8 w-8 text-purple-600" />
+            <div className="rounded-2xl ring-1 ring-slate-200/70 shadow-sm p-8 text-center hover:shadow-md transition-shadow">
+              <div className="rounded-2xl p-6 w-16 h-16 mx-auto mb-6 flex items-center justify-center bg-gradient-to-br from-blue-100 to-blue-50 ring-1 ring-blue-200/60 shadow-sm">
+                <Palette className="h-8 w-8 text-blue-600" />
               </div>
-              <h3 className="text-xl font-semibold mb-4">
+              <h3 className="text-xl font-semibold mb-4 text-black">
                 AI-Powered Discovery
               </h3>
-              <p className="text-gray-600">
+              <p className="text-black">
                 Our AI helps artisans create compelling product descriptions,
                 videos, and showcase their work beautifully.
               </p>
             </div>
-            <div className="text-center">
-              <div className="bg-blue-100 rounded-2xl p-6 w-16 h-16 mx-auto mb-6 flex items-center justify-center">
+            <div className="rounded-2xl ring-1 ring-slate-200/70 shadow-sm p-8 text-center hover:shadow-md transition-shadow">
+              <div className="rounded-2xl p-6 w-16 h-16 mx-auto mb-6 flex items-center justify-center bg-gradient-to-br from-blue-100 to-blue-50 ring-1 ring-blue-200/60 shadow-sm">
                 <Users className="h-8 w-8 text-blue-600" />
               </div>
-              <h3 className="text-xl font-semibold mb-4">
+              <h3 className="text-xl font-semibold mb-4 text-black">
                 Direct from Artisans
               </h3>
-              <p className="text-gray-600">
+              <p className="text-black">
                 Shop directly from skilled artisans and support traditional
                 craftsmanship while getting authentic pieces.
               </p>
             </div>
-            <div className="text-center">
-              <div className="bg-green-100 rounded-2xl p-6 w-16 h-16 mx-auto mb-6 flex items-center justify-center">
+            <div className="rounded-2xl ring-1 ring-slate-200/70 shadow-sm p-8 text-center hover:shadow-md transition-shadow">
+              <div className="rounded-2xl p-6 w-16 h-16 mx-auto mb-6 flex items-center justify-center bg-gradient-to-br from-green-100 to-green-50 ring-1 ring-green-200/60 shadow-sm">
                 <Star className="h-8 w-8 text-green-600" />
               </div>
-              <h3 className="text-xl font-semibold mb-4">Quality Guaranteed</h3>
-              <p className="text-gray-600">
+              <h3 className="text-xl font-semibold mb-4 text-black">
+                Quality Guaranteed
+              </h3>
+              <p className="text-black">
                 Every product is carefully curated and quality-checked to ensure
                 you get the best handcrafted items.
               </p>
