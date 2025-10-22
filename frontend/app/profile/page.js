@@ -17,10 +17,10 @@ import { useRouter } from "next/navigation";
 
 // Badge colors for statuses
 const statusColors = {
-  pending: "bg-yellow-100 text-yellow-700",
-  processing: "bg-blue-100 text-blue-700",
-  shipped: "bg-purple-100 text-purple-700",
-  "out-for-delivery": "bg-orange-100 text-orange-700",
+  pending: "bg-gray-100 text-gray-700",
+  processing: "bg-gray-100 text-gray-700",
+  shipped: "bg-gray-100 text-gray-700",
+  "out-for-delivery": "bg-gray-100 text-gray-700",
   delivered: "bg-green-100 text-green-700",
   cancelled: "bg-red-100 text-red-700",
 };
@@ -128,7 +128,7 @@ const handleLogout = async () => {
               src={profile?.photoURL || user.photoURL || "/default-avatar.png"}
               alt="Profile"
               fill
-              className="rounded-full object-cover border-4 border-amber-200"
+              className="rounded-full object-cover border-4 border-gray-200"
             />
           </div>
           <h2 className="font-bold text-lg">{profile?.name || user.displayName}</h2>
@@ -215,7 +215,7 @@ function SidebarItem({ icon: Icon, label, isActive, onClick, className = "" }) {
       onClick={onClick}
       className={`flex items-center w-full gap-3 px-4 py-2 rounded-lg text-sm font-medium transition ${
         isActive
-          ? "bg-amber-100 text-amber-800 shadow-sm"
+          ? "bg-gray-100 text-gray-900 shadow-sm"
           : "text-gray-600 hover:bg-gray-100"
       } ${className}`}
     >
@@ -242,22 +242,22 @@ function OrdersSection({ activeOrders, pastOrders, setSelectedOrder }) {
         <button
           onClick={() => setTab("active")}
           className={`px-6 py-2 rounded-full font-medium ${
-            tab === "active" ? "bg-amber-600 text-white" : "bg-gray-200 text-gray-700"
+            tab === "active" ? "bg-black text-white" : "bg-gray-200 text-gray-700"
           }`}
         >
           Active Orders
-          <span className="ml-2 text-sm bg-green-100 text-green-800 px-2 py-0.5 rounded-full">
+          <span className="ml-2 text-sm bg-gray-100 text-gray-800 px-2 py-0.5 rounded-full">
             {activeOrders.length}
           </span>
         </button>
         <button
           onClick={() => setTab("history")}
           className={`px-6 py-2 rounded-full font-medium ${
-            tab === "history" ? "bg-amber-600 text-white" : "bg-gray-200 text-gray-700"
+            tab === "history" ? "bg-black text-white" : "bg-gray-200 text-gray-700"
           }`}
         >
           Order History
-          <span className="ml-2 text-sm bg-gray-100 text-gray-700 px-2 py-0.5 rounded-full">
+          <span className="ml-2 text-sm bg-gray-100 text-gray-800 px-2 py-0.5 rounded-full">
             {pastOrders.length}
           </span>
         </button>
@@ -291,7 +291,7 @@ function OrdersSection({ activeOrders, pastOrders, setSelectedOrder }) {
                   <p className="text-sm text-gray-600 mt-1">
                     Ordered on: {formatDate(order.createdAt)}
                   </p>
-                  <p className="mt-2 text-amber-700 font-semibold">₹{order.amount}</p>
+                  <p className="mt-2 text-gray-900 font-semibold">₹{order.amount}</p>
 
                   <span
                     className={`mt-2 inline-block px-3 py-1 text-xs font-medium rounded-full ${
@@ -325,7 +325,7 @@ function OrdersSection({ activeOrders, pastOrders, setSelectedOrder }) {
                 <p className="text-sm text-gray-600 mt-1">
                   Ordered on: {formatDate(order.createdAt)}
                 </p>
-                <p className="mt-2 text-amber-700 font-semibold">₹{order.amount}</p>
+                <p className="mt-2 text-gray-900 font-semibold">₹{order.amount}</p>
                 <span
                   className={`mt-2 inline-block px-3 py-1 text-xs font-medium rounded-full ${
                     statusColors[order.status]
@@ -398,7 +398,7 @@ function OrderDetailsModal({ order, trackingSteps, onClose, onCancel }) {
 
           {/* Green Progress Line */}
           <div
-            className="absolute top-4 left-0 h-1 bg-green-500 transition-all duration-500"
+            className="absolute top-4 left-0 h-1 bg-black transition-all duration-500"
             style={{
               width:
                 currentIndex === -1
@@ -421,9 +421,9 @@ function OrderDetailsModal({ order, trackingSteps, onClose, onCancel }) {
                 <div
                   className={`w-8 h-8 flex items-center justify-center rounded-full border-2 text-sm font-bold transition-colors duration-300 ${
                     isCompleted
-                      ? "bg-green-500 text-white border-green-500"
+                      ? "bg-black text-white border-black"
                       : isCurrent
-                      ? "bg-yellow-400 text-white border-yellow-400"
+                      ? "bg-black text-white border-black"
                       : "border-gray-300 text-gray-400 bg-white"
                   }`}
                 >
@@ -433,11 +433,7 @@ function OrderDetailsModal({ order, trackingSteps, onClose, onCancel }) {
                 {/* Step Label */}
                 <span
                   className={`mt-2 text-xs text-center font-medium ${
-                    isCompleted
-                      ? "text-green-600"
-                      : isCurrent
-                      ? "text-yellow-600"
-                      : "text-gray-400"
+                    isCompleted || isCurrent ? "text-gray-900" : "text-gray-400"
                   }`}
                 >
                   {step.replace("-", " ")}
@@ -448,14 +444,12 @@ function OrderDetailsModal({ order, trackingSteps, onClose, onCancel }) {
         </div>
 
         {/* Cancel Button */}
-        {["pending", "processing", "paid"].includes(order.status) && (
-          <Button
-            className="w-full mt-6 bg-red-600 hover:bg-red-700 text-white font-medium rounded-full py-2"
-            onClick={() => onCancel(order.id)}
-          >
-            Cancel Order
-          </Button>
-        )}
+        <Button
+          className="w-full mt-6 bg-red-600 hover:bg-red-700 text-white font-medium rounded-full py-2"
+          onClick={() => onCancel(order.id)}
+        >
+          Cancel Order
+        </Button>
       </motion.div>
     </div>
   );

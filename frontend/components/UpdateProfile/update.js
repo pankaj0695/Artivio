@@ -79,7 +79,7 @@ export default function UpdateProfileInline({ onClose }) {
       await updateUserProfile(user.uid, { ...form, photoURL });
       alert("Profile updated successfully!");
       setUploading(false);
-      onClose();
+      onClose?.(); // prevent error if onClose is undefined
     } catch (err) {
       console.error(err);
       alert("Failed to update profile.");
@@ -88,14 +88,14 @@ export default function UpdateProfileInline({ onClose }) {
   };
 
   return (
-    <Card className="p-6 bg-white shadow-md rounded-2xl space-y-4">
+    <Card className="p-6 bg-white border border-gray-200 shadow-md rounded-2xl space-y-4">
       <h2 className="text-xl font-bold text-gray-800 text-center">Update Profile</h2>
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Profile Image */}
         <div className="flex justify-center relative">
           <div
             onClick={() => fileInputRef.current.click()}
-            className="relative w-28 h-28 rounded-full border border-gray-300 cursor-pointer overflow-hidden group hover:border-amber-500 transition"
+            className="relative w-28 h-28 rounded-full border border-gray-300 cursor-pointer overflow-hidden group hover:border-black transition"
           >
             {form.photoURL && (
               <img src={form.photoURL} alt="Profile" className="w-full h-full object-cover" />
@@ -124,19 +124,73 @@ export default function UpdateProfileInline({ onClose }) {
 
         {/* Inputs */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <input name="name" value={form.name} onChange={handleChange} placeholder="Name" className="border rounded px-3 py-2" />
-          <input name="email" value={form.email} disabled placeholder="Email" className="border rounded px-3 py-2 bg-gray-100" />
-          <input name="phoneNo" value={form.phoneNo} onChange={handleChange} placeholder="Phone" className="border rounded px-3 py-2" />
-          <input name="role" value={form.role} onChange={handleChange} placeholder="Role" className="border rounded px-3 py-2" />
-          <input name="city" value={form.city} onChange={handleChange} placeholder="City" className="border rounded px-3 py-2" />
-          <input name="state" value={form.state} onChange={handleChange} placeholder="State" className="border rounded px-3 py-2" />
-          <input name="address" value={form.address} onChange={handleChange} placeholder="Address" className="border rounded px-3 py-2 sm:col-span-2" />
+          <input
+            name="name"
+            value={form.name}
+            onChange={handleChange}
+            placeholder="Name"
+            className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-black focus:border-black"
+          />
+          <input
+            name="email"
+            value={form.email}
+            disabled
+            placeholder="Email"
+            className="border border-gray-300 rounded px-3 py-2 bg-gray-100"
+          />
+          <input
+            name="phoneNo"
+            value={form.phoneNo}
+            onChange={handleChange}
+            placeholder="Phone"
+            className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-black focus:border-black"
+          />
+          <input
+            name="role"
+            value={form.role}
+            onChange={handleChange}
+            placeholder="Role"
+            className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-black focus:border-black"
+          />
+          <input
+            name="city"
+            value={form.city}
+            onChange={handleChange}
+            placeholder="City"
+            className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-black focus:border-black"
+          />
+          <input
+            name="state"
+            value={form.state}
+            onChange={handleChange}
+            placeholder="State"
+            className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-black focus:border-black"
+          />
+          <input
+            name="address"
+            value={form.address}
+            onChange={handleChange}
+            placeholder="Address"
+            className="border border-gray-300 rounded px-3 py-2 sm:col-span-2 focus:outline-none focus:ring-2 focus:ring-black focus:border-black"
+          />
         </div>
 
         {/* Buttons */}
         <div className="flex justify-end gap-2">
-          <button type="button" onClick={onClose} className="bg-gray-300 hover:bg-gray-400 px-4 py-2 rounded">Cancel</button>
-          <button type="submit" disabled={uploading} className="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded">
+          <button
+            type="button"
+            onClick={onClose}
+            className="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded text-gray-800 transition"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={uploading}
+            aria-busy={uploading}
+            aria-disabled={uploading}
+            className="bg-black hover:bg-black/90 text-white px-4 py-2 rounded transition focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black disabled:opacity-60 disabled:pointer-events-none"
+          >
             {uploading ? "Saving..." : "Save"}
           </button>
         </div>

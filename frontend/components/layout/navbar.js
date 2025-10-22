@@ -1,13 +1,14 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import Link from "next/link";
-import { useRouter, usePathname } from "next/navigation"; // added usePathname
+import { useRouter, usePathname } from "next/navigation";
 import { ShoppingCart, User, LogOut, Palette, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { useCartStore } from "@/lib/store";
 import { logout } from "@/lib/auth";
+import { motion } from "framer-motion";
 
 export function Navbar() {
   const { user, profile } = useAuth();
@@ -48,51 +49,90 @@ export function Navbar() {
   const isProducts = pathname?.startsWith("/products");
   const isArtisans = pathname?.startsWith("/artisans");
 
-  const navLinks = (
-    <div className="hidden md:flex items-center gap-2 rounded-full supports-[backdrop-filter]:bg-white/70 bg-white/90 px-2 py-1.5 border border-slate-200/70 shadow-sm backdrop-blur">
-      {/* Segmented toggle: Products | Artisans */}
-      <div className="inline-flex items-center gap-1 p-1 rounded-full bg-slate-100/70 border border-slate-200/70">
-        <Link
-          href="/products"
-          aria-current={isProducts ? "page" : undefined}
-          className={`px-3.5 py-2 rounded-full text-[15px] sm:text-base font-semibold transition-colors ${
-            isProducts
-              ? "bg-white text-primary shadow-sm ring-1 ring-primary/20"
-              : "text-slate-700 hover:text-primary"
-          }`}
-        >
-          Products & Services
-        </Link>
-        <Link
-          href="/artisans"
-          aria-current={isArtisans ? "page" : undefined}
-          className={`px-3.5 py-2 rounded-full text-[15px] sm:text-base font-semibold transition-colors ${
-            isArtisans
-              ? "bg-white text-primary shadow-sm ring-1 ring-primary/20"
-              : "text-slate-700 hover:text-primary"
-          }`}
-        >
-          Artisans
-        </Link>
-      </div>
+  // Build tabs (includes My Store/Dashboard when artisan)
+  const myStoreHref = user?.uid ? `/artisan/${user.uid}` : "/artisan/profile";
+  const tabs = [
+    { key: "home", label: "Home", href: "/" },
+    { key: "products", label: "Products & Services", href: "/products" },
+    { key: "artisans", label: "Artisans", href: "/artisans" },
+    ...(profile?.role === "artisan"
+      ? [
+          { key: "store", label: "My Store", href: myStoreHref },
+          { key: "dashboard", label: "Dashboard", href: "/artisan/dashboard" },
+        ]
+      : [{ key: "profile", label: "Profile", href: "/profile" }]),
+  ];
 
-      {/* Keep existing artisan-only links (no hover underline) */}
-      {profile?.role === "artisan" && (
-        <>
-          <Link
-            href={user?.uid ? `/artisan/${user.uid}` : "/artisan/profile"}
-            className="px-3.5 py-2.5 rounded-full text-[15px] sm:text-base font-semibold text-slate-700 hover:text-primary hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 transition-all duration-200 ease-out hover:shadow-[0_1px_0_rgba(0,0,0,0.04)]"
-          >
-            My Store
-          </Link>
-          <Link
-            href="/artisan/dashboard"
-            className="px-3.5 py-2.5 rounded-full text-[15px] sm:text-base font-semibold text-slate-700 hover:text-primary hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 transition-all duration-200 ease-out hover:shadow-[0_1px_0_rgba(0,0,0,0.04)]"
-          >
-            Dashboard
-          </Link>
-        </>
-      )}
+  const isActiveTab = (href) => {
+    if (href === "/") return pathname === "/";
+    return pathname?.startsWith(href);
+  };
+
+  // Sliding pill: measure active tab inside the toggle container
+  const containerRef = useRef(null);
+  const tabRefs = useRef({});
+  const [pill, setPill] = useState({ left: 0, width: 0, height: 0 });
+
+  const activeKey = (tabs.find((t) => isActiveTab(t.href))?.key) || tabs[0]?.key;
+
+  const updatePill = () => {
+    const container = containerRef.current;
+    const el = tabRefs.current[activeKey];
+    if (!container || !el) return;
+    const c = container.getBoundingClientRect();
+    const r = el.getBoundingClientRect();
+    setPill({
+      left: r.left - c.left,
+      width: r.width,
+      height: r.height,
+    });
+  };
+
+  useEffect(() => {
+    updatePill();
+  }, [pathname, tabs.length, mounted]);
+
+  useEffect(() => {
+    const onResize = () => updatePill();
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  const navLinks = (
+    <div className="hidden md:flex items-center gap-3">
+      {/* Slide toggle with animated pill (constrained to this container) */}
+      <div
+        ref={containerRef}
+        className="relative inline-flex items-center gap-1 p-1 rounded-full supports-[backdrop-filter]:bg-white/70 bg-white/90 border border-slate-200/70 shadow-sm backdrop-blur"
+      >
+        {/* Single animated pill */}
+        <motion.span
+          className="absolute rounded-full bg-black"
+          style={{ top: 4, bottom: 4 }}
+          animate={{ left: pill.left + 4, width: Math.max(0, pill.width - 8) }}
+          transition={{ type: "spring", stiffness: 500, damping: 40 }}
+        />
+        {tabs.map((tab) => {
+          const active = tab.key === activeKey;
+          return (
+            <Link
+              key={tab.key}
+              href={tab.href}
+              aria-current={active ? "page" : undefined}
+              className="relative inline-flex rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+            >
+              <span
+                ref={(el) => (tabRefs.current[tab.key] = el)}
+                className={`relative z-10 px-3.5 py-2 rounded-full text-[15px] sm:text-base font-semibold transition-colors ${
+                  active ? "text-white" : "text-slate-700 hover:text-slate-900"
+                }`}
+              >
+                {tab.label}
+              </span>
+            </Link>
+          );
+        })}
+      </div>
     </div>
   );
 

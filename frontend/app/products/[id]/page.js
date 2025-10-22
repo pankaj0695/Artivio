@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { LoadingPage } from "@/components/ui/loading";
 import { useCartStore } from "@/lib/store";
 import { getProduct } from "@/lib/firestore";
-import { ShoppingCart, Trash2, Star, Package, Truck } from "lucide-react";
+import { Star, Package, Truck } from "lucide-react";
 import { toast } from "sonner";
 
 // Swiper imports
@@ -103,7 +103,9 @@ export default function ProductDetailPage() {
         {/* Product Info */}
         <div className="space-y-6">
           <div>
-            <Badge className="mb-4 capitalize">{product.category}</Badge>
+            <Badge className="mb-4 capitalize">
+              {isService ? "Appointment" : (product.category || "Product")}
+            </Badge>
             <h1 className="text-4xl font-bold text-gray-900 mb-2">
               {product.title}
             </h1>
@@ -141,7 +143,7 @@ export default function ProductDetailPage() {
               <Button
                 onClick={handleBookAppointment}
                 size="lg"
-                className="w-full rounded-full text-lg py-6"
+                className="w-full rounded-full text-lg py-6 bg-black text-white hover:bg-black/90 active:bg-black/80 active:scale-[.99] focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black transition-colors"
               >
                 Book Appointment
               </Button>
@@ -149,11 +151,9 @@ export default function ProductDetailPage() {
               <Button
                 onClick={handleToggleCart}
                 size="lg"
-                className="w-full rounded-full text-lg py-6"
-                variant={isInCart ? "destructive" : "default"}
+                className="w-full rounded-full text-lg py-6 bg-black text-white hover:bg-black/90 active:bg-black/80 active:scale-[.99] focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black transition-colors disabled:opacity-60 disabled:pointer-events-none"
                 disabled={product.stock === 0 && !isInCart}
               >
-                {isInCart ? <Trash2 className="mr-2 h-5 w-5" /> : <ShoppingCart className="mr-2 h-5 w-5" />}
                 {isInCart ? "Remove from Cart" : "Add to Cart"}
               </Button>
             )}

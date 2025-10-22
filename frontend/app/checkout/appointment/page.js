@@ -158,11 +158,11 @@ export default function AppointmentCheckoutPage() {
   };
 
   return (
-    <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-6">
       <h1 className="text-3xl font-bold mb-6">Book Appointment</h1>
 
-      <Card className="rounded-2xl border-0 shadow-sm">
-        <CardContent className="p-6 space-y-4">
+      <Card className="rounded-2xl border border-gray-200 bg-white shadow-sm">
+        <CardContent className="p-6 space-y-6">
           <h2 className="font-semibold text-lg mb-2">{productData.title}</h2>
 
           <label className="block font-semibold text-lg mb-2">
@@ -173,14 +173,17 @@ export default function AppointmentCheckoutPage() {
             onChange={(date) => setBookingDate(date)}
             minDate={new Date()}
             placeholderText="Select a date"
-            className="border p-2 w-full rounded"
+            className="border border-gray-300 p-2 w-full rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-black focus:border-black"
             dateFormat="dd/MM/yyyy"
           />
 
           <Button
+            type="button"
             onClick={handleBookAppointment}
-            className="w-full rounded-full mt-4"
+            className="w-full rounded-full mt-4 bg-black text-white hover:bg-black/90 active:bg-black transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black disabled:opacity-60 disabled:pointer-events-none"
             disabled={isProcessing}
+            aria-busy={isProcessing}
+            aria-disabled={isProcessing}
           >
             {isProcessing ? "Processing Payment..." : `Book & Pay ₹${productData.price}`}
           </Button>

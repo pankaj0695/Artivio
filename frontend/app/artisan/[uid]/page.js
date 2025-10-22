@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { getArtisanPublic, listPortfolio } from "@/lib/firestore";
 import { getProducts } from "@/lib/firestore";
-import { ShoppingCart, Share2, MessageCircle, Pencil } from "lucide-react";
+import { Share2, MessageCircle, Pencil } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 
 export default function ArtisanPublicProfilePage() {
@@ -29,11 +29,11 @@ export default function ArtisanPublicProfilePage() {
         const p = await getArtisanPublic(uid);
         setProfile(p);
         setPortfolio(await listPortfolio(uid));
-  const { products: listings } = await getProducts({ artisanId: uid, status: "active" });
-  const prods = (listings || []).filter((p) => (p.type || "product") !== "service");
-  const servs = (listings || []).filter((p) => (p.type || "product") === "service");
-  setProducts(prods);
-  setServices(servs);
+        const { products: listings } = await getProducts({ artisanId: uid, status: "active" });
+        const prods = (listings || []).filter((p) => (p.type || "product") !== "service");
+        const servs = (listings || []).filter((p) => (p.type || "product") === "service");
+        setProducts(prods);
+        setServices(servs);
       } finally {
         setLoading(false);
       }
@@ -74,18 +74,24 @@ export default function ArtisanPublicProfilePage() {
             </div>
             <div className="flex gap-2">
               {profile?.socials?.whatsapp && (
-                <Button asChild variant="outline">
+                <Button
+                  asChild
+                  className="rounded-full bg-black text-white hover:bg-black/90 active:bg-black/80 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black transition-colors"
+                >
                   <a href={`https://wa.me/${profile.socials.whatsapp}`} target="_blank" rel="noreferrer">
                     <MessageCircle className="mr-2 h-4 w-4" /> Contact
                   </a>
                 </Button>
               )}
-              <Button variant="secondary" onClick={share}>
+              <Button
+                onClick={share}
+                className="rounded-full bg-black text-white hover:bg-black/90 active:bg-black/80 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black transition-colors"
+              >
                 <Share2 className="mr-2 h-4 w-4" /> Share
               </Button>
               {user?.uid === uid && (
                 <Link href="/artisan/profile">
-                  <Button variant="outline">
+                  <Button className="rounded-full bg-black text-white hover:bg-black/90 active:bg-black/80 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black transition-colors">
                     <Pencil className="mr-2 h-4 w-4" /> Edit Profile
                   </Button>
                 </Link>
@@ -111,8 +117,8 @@ export default function ArtisanPublicProfilePage() {
                 <div className="font-medium">{p.title}</div>
                 <div className="text-sm">₹{p.price}</div>
                 <Link href={`/products/${p.id}`}>
-                  <Button className="mt-2 w-full" variant="secondary">
-                    <ShoppingCart className="mr-2 h-4 w-4" /> View
+                  <Button className="mt-2 w-full rounded-full bg-black text-white hover:bg-black/90 active:bg-black/80 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black transition-colors">
+                    View
                   </Button>
                 </Link>
               </Card>
@@ -136,7 +142,7 @@ export default function ArtisanPublicProfilePage() {
                 <div className="font-medium">{s.title}</div>
                 <div className="text-sm">₹{s.price}</div>
                 <Link href={`/products/${s.id}`}>
-                  <Button className="mt-2 w-full" variant="secondary">
+                  <Button className="mt-2 w-full rounded-full bg-black text-white hover:bg-black/90 active:bg-black/80 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black transition-colors">
                     View
                   </Button>
                 </Link>

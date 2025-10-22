@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useAuth } from "@/hooks/use-auth";
 import { useRouter } from "next/navigation";
 import { createOrder, getUserAddresses, addUserAddress } from "@/lib/firestore";
+import { Loader2 } from "lucide-react";
 
 export default function CheckoutPage() {
   const { user, loading } = useAuth();
@@ -18,6 +19,7 @@ export default function CheckoutPage() {
   const [newAddress, setNewAddress] = useState("");
   const [showNewAddress, setShowNewAddress] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [savingAddress, setSavingAddress] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -33,11 +35,19 @@ export default function CheckoutPage() {
 
   const handleAddAddress = async () => {
     if (!newAddress.trim()) return;
-    const { addresses: updatedAddresses } = await addUserAddress(user.uid, newAddress.trim());
-    setAddresses(updatedAddresses);
-    setSelectedAddress(newAddress.trim());
-    setShowNewAddress(false);
-    setNewAddress("");
+    try {
+      setSavingAddress(true);
+      const { addresses: updatedAddresses } = await addUserAddress(
+        user.uid,
+        newAddress.trim()
+      );
+      setAddresses(updatedAddresses);
+      setSelectedAddress(newAddress.trim());
+      setShowNewAddress(false);
+      setNewAddress("");
+    } finally {
+      setSavingAddress(false);
+    }
   };
 
   const getSelectedAddress = () => {
@@ -202,13 +212,13 @@ export default function CheckoutPage() {
     <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <h1 className="text-3xl font-bold mb-6">Checkout</h1>
       
-      <Card className="rounded-2xl border-0 shadow-sm mb-6">
+      <Card className="rounded-2xl border border-gray-200 bg-white shadow-md mb-6">
         <CardContent className="p-6 space-y-4">
           <h2 className="font-semibold text-lg mb-2">Shipping Address</h2>
           {addresses.length > 0 && !showNewAddress && (
             <div className="space-y-2 mb-4">
               {addresses.map((address, idx) => (
-                <label key={idx} className="flex items-center space-x-2">
+                <label key={idx} className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-50 transition">
                   <input
                     type="radio"
                     name="address"
@@ -223,32 +233,40 @@ export default function CheckoutPage() {
           <Button
             variant="outline"
             onClick={() => setShowNewAddress((v) => !v)}
-            className="mb-2"
+            className="mb-2 rounded-full border-2 hover:bg-white hover:shadow-md active:scale-[0.98] transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
           >
             {showNewAddress ? "Cancel" : "Add New Address"}
           </Button>
           {showNewAddress && (
             <div className="space-y-2 mb-4">
               <input
-                className="border p-2 w-full rounded"
+                className="border border-gray-300 p-3 w-full rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/60 transition"
                 placeholder="Enter address"
                 value={newAddress}
                 onChange={(e) => setNewAddress(e.target.value)}
               />
               <Button
                 onClick={handleAddAddress}
-                className="w-1/2 rounded-full text-sm py-1"
+                className="w-1/2 rounded-full inline-flex items-center justify-center gap-2 bg-black text-white shadow-md hover:shadow-lg hover:bg-black/90 active:scale-[0.98] transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                 size="sm"
-                disabled={!newAddress.trim()}
+                disabled={!newAddress.trim() || savingAddress}
+                aria-busy={savingAddress}
               >
-                Save Address
+                {savingAddress ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  "Save Address"
+                )}
               </Button>
             </div>
           )}
         </CardContent>
       </Card>
 
-      <Card className="rounded-2xl border-0 shadow-sm">
+      <Card className="rounded-2xl border border-gray-200 bg-white shadow-md">
         <CardContent className="p-6 space-y-4">
           <div className="flex items-center justify-between">
             <div>Items</div>
@@ -263,13 +281,21 @@ export default function CheckoutPage() {
           
           <Button
             onClick={handlePlaceOrder}
-            className="w-full rounded-full"
+            className="w-full rounded-full inline-flex items-center justify-center gap-2 bg-black text-white shadow-md hover:shadow-lg hover:bg-black/90 active:scale-[0.98] transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
             disabled={isProcessing}
+            aria-busy={isProcessing}
           >
-            {isProcessing ? "Processing Payment..." : "Place Order"}
+            {isProcessing ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Processing Payment...
+              </>
+            ) : (
+              "Place Order"
+            )}
           </Button>
         </CardContent>
       </Card>
     </div>
   );
-}`Ze`
+}
