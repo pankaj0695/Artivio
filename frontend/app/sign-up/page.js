@@ -68,50 +68,39 @@ export default function SignUpPage() {
     setLoading(false);
   };
 
-  const handleGoogleSignIn = async () => {
-    setLoading(true);
-    setError("");
 
-    const { user, isNewUser, error } = await signInWithGoogle();
-    if (error) {
-      setError(error);
+const handleGoogleSignIn = async () => {
+  setLoading(true);
+  setError("");
+
+  try {
+    const res = await signInWithGoogle();
+
+    if (res.error) {
+      setError(res.error);
       setLoading(false);
       return;
     }
-    if (isNewUser) {
-      setPendingGoogleUser(user);
-      setShowRolePrompt(true);
+
+    // If role is needed, store pendingGoogleUser to complete profile
+    if (res.needsPassword) {
+      setPendingGoogleUser(res.user);
+      router.push(`/auth/set-password?next=/`);
       setLoading(false);
       return;
     }
+
+    // Normal login
     router.push("/");
-
+  } catch (error) {
+    setError(error.message || "Google sign-in failed");
+  } finally {
     setLoading(false);
-  };
+  }
+};
 
-  const confirmRole = async () => {
-    if (!pendingGoogleUser) return;
-    setLoading(true);
-    const profile = {
-      name: pendingGoogleUser.displayName,
-      email: pendingGoogleUser.email,
-      role: selectedRole,
-      photoURL: pendingGoogleUser.photoURL || null,
-      createdAt: new Date(),
-    };
-    const { error } = await createOrUpdateUserProfile(
-      pendingGoogleUser.uid,
-      profile
-    );
-    if (error) setError(error);
-    else {
-      if (selectedRole === "artisan") router.push("/artisan/profile");
-      else router.push("/");
-    }
-    setShowRolePrompt(false);
-    setPendingGoogleUser(null);
-    setLoading(false);
-  };
+
+
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-blue-50 py-12 px-4 sm:px-6 lg:px-8">

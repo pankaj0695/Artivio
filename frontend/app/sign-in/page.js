@@ -52,27 +52,28 @@ export default function SignInPage() {
   };
 
   const handleGoogleSignIn = async () => {
-    setLoading(true);
-    setError("");
+  setLoading(true);
+  setError("");
 
-    const { user, isNewUser, error } = await signInWithGoogle();
-    if (error) {
-      setError(error);
-      setLoading(false);
-      return;
-    }
+  const { user, isNewUser, needsPassword, error } = await signInWithGoogle();
 
-    if (isNewUser) {
-      setPendingGoogleUser(user);
-      setShowRolePrompt(true);
-      setLoading(false);
-      return;
-    }
-
-    router.push("/");
-
+  if (error) {
+    setError(error);
     setLoading(false);
-  };
+    return;
+  }
+
+  // Redirect new Google users or users without password
+  if (isNewUser || needsPassword) {
+    router.push(`/auth/set-password?next=/`);
+    setLoading(false);
+    return;
+  }
+
+  router.push("/");
+  setLoading(false);
+};
+
 
   const confirmRole = async () => {
     if (!pendingGoogleUser) return;
