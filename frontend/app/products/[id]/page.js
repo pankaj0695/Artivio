@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
@@ -11,6 +12,7 @@ import { useCartStore } from "@/lib/store";
 import { getProduct } from "@/lib/firestore";
 import { Star, Package, Truck } from "lucide-react";
 import { toast } from "sonner";
+import { labelProductPage } from "@/lib/analytics";
 
 // Swiper imports
 import { Swiper, SwiperSlide } from "swiper/react";
@@ -32,10 +34,25 @@ export default function ProductDetailPage() {
     queryFn: () => getProduct(params.id),
   });
 
-  if (isLoading) return <LoadingPage />;
-  if (error || !data?.product) return <div>Product not found</div>;
+  // Compute product reference early so hooks can use it
+  const product = data?.product;
 
-  const product = data.product;
+  // Update analytics label and document title when product is ready
+  useEffect(() => {
+    if (!product) return;
+    try {
+      labelProductPage(product.id, product.title);
+      if (typeof document !== "undefined" && product.title) {
+        document.title = `${product.title} – Artivio`;
+      }
+    } catch (e) {
+      // non-blocking
+    }
+  }, [product?.id, product?.title]);
+
+  // After hooks are declared, render based on loading/error states
+  if (isLoading) return <LoadingPage />;
+  if (error || !product) return <div>Product not found</div>;
   const isInCart = items.some((item) => item.id === product.id);
   const isService = (product.type || "product") === "service";
 
@@ -104,7 +121,7 @@ export default function ProductDetailPage() {
         <div className="space-y-6">
           <div>
             <Badge className="mb-4 capitalize">
-              {isService ? "Appointment" : (product.category || "Product")}
+              {isService ? "Appointment" : product.category || "Product"}
             </Badge>
             <h1 className="text-4xl font-bold text-gray-900 mb-2">
               {product.title}
@@ -117,7 +134,9 @@ export default function ProductDetailPage() {
                 ₹{product.price}
               </span>
               {!isService && (
-                <Badge variant={product.stock > 10 ? "secondary" : "destructive"}>
+                <Badge
+                  variant={product.stock > 10 ? "secondary" : "destructive"}
+                >
                   {product.stock} in stock
                 </Badge>
               )}
@@ -125,7 +144,9 @@ export default function ProductDetailPage() {
           </div>
 
           <div className="prose max-w-none">
-            <p className="text-gray-700 leading-relaxed">{product.description}</p>
+            <p className="text-gray-700 leading-relaxed">
+              {product.description}
+            </p>
           </div>
 
           {product.tags?.length > 0 && (
@@ -186,7 +207,9 @@ export default function ProductDetailPage() {
                 </div>
                 <div>
                   <p className="font-medium">Artisan Profile</p>
-                  <p className="text-sm text-gray-600">Handcrafting since 2015</p>
+                  <p className="text-sm text-gray-600">
+                    Handcrafting since 2015
+                  </p>
                 </div>
                 <div className="ml-auto flex items-center">
                   <Star className="h-4 w-4 fill-yellow-400 text-yellow-400 mr-1" />

@@ -7,11 +7,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { getProducts, getAllArtisanProducts,getAllArtisanServices } from "@/lib/firestore";
+import {
+  getProducts,
+  getAllArtisanProducts,
+  getAllArtisanServices,
+} from "@/lib/firestore";
 import { useAuth } from "@/hooks/use-auth";
 import Link from "next/link";
 import Image from "next/image";
 import { Plus, Search, Edit, Eye } from "lucide-react";
+import { ViewsBadge } from "@/components/artisan/views-badge";
 
 function ProductsContent() {
   const { user } = useAuth();
@@ -36,12 +41,11 @@ function ProductsContent() {
           <p className="text-gray-600 mt-2">Manage your service catalog</p>
         </div>
         <Link href="/artisan/products/new">
-  <Button className="rounded-full flex items-center justify-center gap-2">
-    <Plus className="h-4 w-4" />
-    Add Services
-  </Button>
-</Link>
-
+          <Button className="rounded-full flex items-center justify-center gap-2">
+            <Plus className="h-4 w-4" />
+            Add Services
+          </Button>
+        </Link>
       </div>
 
       <div className="mb-6">
@@ -82,14 +86,11 @@ function ProductsContent() {
                 : "Start by adding your first product"}
             </p>
             <Link href="/artisan/products/new">
-  <Button className="rounded-full flex items-center gap-2">
-    <Plus className="h-4 w-4" />
-    <span>Add Product</span>
-  </Button>
-</Link>
-
-
-
+              <Button className="rounded-full flex items-center gap-2">
+                <Plus className="h-4 w-4" />
+                <span>Add Product</span>
+              </Button>
+            </Link>
           </div>
         </div>
       ) : (
@@ -138,11 +139,14 @@ function ProductsContent() {
                   <span className="font-bold text-lg text-primary">
                     ₹{product.price}
                   </span>
-                  {(product.type || "product") !== "service" && (
-                    <span className="text-sm text-gray-500">
-                      Stock: {product.stock}
-                    </span>
-                  )}
+                  <div className="flex items-center gap-3">
+                    <ViewsBadge productId={product.id} />
+                    {(product.type || "product") !== "service" && (
+                      <span className="text-sm text-gray-500">
+                        Stock: {product.stock}
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 <div className="flex gap-2">

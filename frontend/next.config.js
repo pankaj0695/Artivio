@@ -27,6 +27,11 @@ const nextConfig = {
   },
   async rewrites() {
     return [
+      // Serve a local SVG placeholder when code requests PNG
+      {
+        source: "/default-avatar.png",
+        destination: "/default-avatar.svg",
+      },
       {
         source: "/api/:path*",
         destination: "http://localhost:8080/api/:path*",

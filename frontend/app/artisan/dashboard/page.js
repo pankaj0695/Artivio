@@ -17,6 +17,7 @@ import { useAuth } from "@/hooks/use-auth";
 import Link from "next/link";
 import RevenueOrdersChart from "@/components/artisan/revenueOrderCharts";
 import { Plus, Package, ShoppingBag, Calendar } from "lucide-react";
+import { ViewsBadge } from "@/components/artisan/views-badge";
 
 function DashboardContent() {
   const { user } = useAuth();
@@ -145,6 +146,7 @@ function DashboardContent() {
                           ₹{product.price}
                         </p>
                       </div>
+                      <ViewsBadge productId={product.id} className="ml-auto" />
                     </Link>
                   );
                 })}
@@ -207,6 +209,7 @@ function DashboardContent() {
                           ₹{service.price}
                         </p>
                       </div>
+                      <ViewsBadge productId={service.id} className="ml-auto" />
                     </Link>
                   );
                 })}
@@ -267,8 +270,7 @@ function DashboardContent() {
                       <div className="flex-1">
                         <h4 className="font-medium">{firstItem?.title}</h4>
                         <p className="text-sm text-gray-600">
-                          Buyer: {buyerName}{" "}
-                          {buyerEmail && `• ${buyerEmail}`}
+                          Buyer: {buyerName} {buyerEmail && `• ${buyerEmail}`}
                         </p>
                         <p className="text-sm text-gray-600">
                           ₹{order.amount} {order.currency} •{" "}
@@ -345,8 +347,7 @@ function DashboardContent() {
                           {firstItem.title || "Service"}
                         </h4>
                         <p className="text-sm text-gray-600">
-                          {customerName}{" "}
-                          {customerEmail && `• ${customerEmail}`}
+                          {customerName} {customerEmail && `• ${customerEmail}`}
                         </p>
                         <p className="text-sm text-gray-600">
                           Appointment Date: {formatDate(appt.bookingDate)}
@@ -407,8 +408,6 @@ function DashboardContent() {
         </Card>
       </div>
     </div>
-
-    
   );
 }
 

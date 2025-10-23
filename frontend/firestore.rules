@@ -8,6 +8,16 @@ service cloud.firestore {
     }
     
     // Products collection
+    // Page statistics for analytics (unique visitors per path)
+    // NOTE: These rules are permissive for demo purposes. Harden before production.
+    match /pageStats/{pathId} {
+      allow read: if true;
+      allow create, update: if true;
+      match /visitors/{visitorId} {
+        allow read: if true;
+        allow create: if true;
+      }
+    }
     match /products/{productId} {
       // Anyone can read active products
       allow read: if resource.data.status == 'active' || 
