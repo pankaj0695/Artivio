@@ -15,7 +15,11 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ImageUploader } from "@/components/ui/image-uploader";
 import { AIButton } from "@/components/ai/ai-button";
-import { createProduct, updateProduct, updateProductWithNFT} from "@/lib/firestore";
+import {
+  createProduct,
+  updateProduct,
+  updateProductWithNFT,
+} from "@/lib/firestore";
 import { useAuth } from "@/hooks/use-auth";
 import { useRouter } from "next/navigation";
 import { Film, UploadCloud } from "lucide-react";
@@ -69,32 +73,47 @@ export function ProductForm({ product, isEdit = false }) {
   const listingType = watchedFields.type || "product";
   const videoPreviewUrl = watchedFields.videoUrl;
 
-  const callAI = async (endpoint, data, field) => {
-    setAiLoading((prev) => ({ ...prev, [field]: true }));
+  // Build backend Flask API endpoints for content routes
+  const buildContentEndpoint = (segment) => {
+    const rawBase = process.env.NEXT_PUBLIC_FLASK_API_BASE_URL || "";
+    if (!rawBase) return `/api/content/${segment}`; // fallback (assumes proxy)
+    const base = rawBase.replace(/\/$/, "");
+    const hasApi = /\/api(?:$|\/)/.test(base);
+    return hasApi
+      ? `${base}/content/${segment}`
+      : `${base}/api/content/${segment}`;
+  };
 
+  const generateTitle = async () => {
+    setAiLoading((prev) => ({ ...prev, title: true }));
     try {
-      const response = await fetch(`/api/ai/${endpoint}`, {
+      // Use current title as seed; if empty, fall back to first words of description
+      const seed = (watchedFields.title || "").trim();
+      const fallbackSeed = (watchedFields.description || "")
+        .split(/\s+/)
+        .slice(0, 12)
+        .join(" ")
+        .trim();
+      const productTitle = seed || fallbackSeed || "Artisan product";
+      const endpoint = buildContentEndpoint("title");
+      const resp = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify({
+          productTitle,
+          category: watchedFields.category || "",
+        }),
       });
-
-      const result = await response.json();
-
-      if (result.error) {
-        console.error("AI Error:", result.error);
+      const data = await resp.json();
+      if (!resp.ok) {
+        console.error("Title generation failed:", data);
         return;
       }
-
-      if (field === "hashtags") {
-        setValue("tags", result.hashtags?.join(", ") || "");
-      } else {
-        setValue(field, result[field] || "");
-      }
-    } catch (error) {
-      console.error("AI call failed:", error);
+      if (data?.title) setValue("title", data.title, { shouldDirty: true });
+    } catch (e) {
+      console.error("Title generation error:", e);
     } finally {
-      setAiLoading((prev) => ({ ...prev, [field]: false }));
+      setAiLoading((prev) => ({ ...prev, title: false }));
     }
   };
 
@@ -105,7 +124,7 @@ export function ProductForm({ product, isEdit = false }) {
     }
     const buildVideosEndpoint = () => {
       const rawBase = process.env.NEXT_PUBLIC_FLASK_API_BASE_URL || "";
-      if (!rawBase) return "/api/videos/generate";
+      if (!rawBase) return "/videos/generate";
       const base = rawBase.replace(/\/$/, "");
       const hasApi = /\/api(?:$|\/)/.test(base);
       return hasApi ? `${base}/videos/generate` : `${base}/api/videos/generate`;
@@ -173,42 +192,94 @@ export function ProductForm({ product, isEdit = false }) {
     }
   };
 
-  const generateDescription = () => {
-    callAI(
-      "description",
-      {
-        product_name: watchedFields.title,
-        keywords: watchedFields.tags.split(",").map((tag) => tag.trim()),
-        materials: "",
-        style: "engaging",
-        story_depth: "medium",
-      },
-      "description"
-    );
+  const generateDescription = async () => {
+    setAiLoading((prev) => ({ ...prev, description: true }));
+    try {
+      const endpoint = buildContentEndpoint("description");
+      const resp = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          productTitle: watchedFields.title || "",
+          category: watchedFields.category || "",
+        }),
+      });
+      const data = await resp.json();
+      if (!resp.ok) {
+        console.error("Description generation failed:", data);
+        return;
+      }
+      if (data?.description)
+        setValue("description", data.description, { shouldDirty: true });
+    } catch (e) {
+      console.error("Description generation error:", e);
+    } finally {
+      setAiLoading((prev) => ({ ...prev, description: false }));
+    }
   };
 
-  const generateTagline = () => {
-    callAI(
-      "tagline",
-      {
-        product_name: watchedFields.title,
-        style: "catchy",
-      },
-      "tagline"
-    );
+  const generateTagline = async () => {
+    setAiLoading((prev) => ({ ...prev, tagline: true }));
+    try {
+      const endpoint = buildContentEndpoint("tagline");
+      const keywords = (watchedFields.tags || "")
+        .split(",")
+        .map((t) => t.trim())
+        .filter(Boolean);
+      const resp = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          productTitle: watchedFields.title || "",
+          keywords,
+        }),
+      });
+      const data = await resp.json();
+      if (!resp.ok) {
+        console.error("Tagline generation failed:", data);
+        return;
+      }
+      if (data?.tagline)
+        setValue("tagline", data.tagline, { shouldDirty: true });
+    } catch (e) {
+      console.error("Tagline generation error:", e);
+    } finally {
+      setAiLoading((prev) => ({ ...prev, tagline: false }));
+    }
   };
 
-  const generateHashtags = () => {
-    callAI(
-      "hashtags",
-      {
-        product_name: watchedFields.title,
-        keywords: watchedFields.description.split(" ").slice(0, 10),
-        style: "trending",
-        platforms: ["instagram", "twitter"],
-      },
-      "hashtags"
-    );
+  const generateTags = async () => {
+    setAiLoading((prev) => ({ ...prev, tags: true }));
+    try {
+      const endpoint = buildContentEndpoint("tags");
+      const resp = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          productTitle: watchedFields.title || "",
+          category: watchedFields.category || "",
+        }),
+      });
+      const data = await resp.json();
+      if (!resp.ok) {
+        console.error("Tags generation failed:", data);
+        return;
+      }
+      if (Array.isArray(data?.tags)) {
+        setValue(
+          "tags",
+          data.tags
+            .map((t) => String(t).trim())
+            .filter(Boolean)
+            .join(", "),
+          { shouldDirty: true }
+        );
+      }
+    } catch (e) {
+      console.error("Tags generation error:", e);
+    } finally {
+      setAiLoading((prev) => ({ ...prev, tags: false }));
+    }
   };
 
   const onSubmit = async (data) => {
@@ -330,9 +401,9 @@ export function ProductForm({ product, isEdit = false }) {
                     : "Product Title"}
                 </Label>
                 <AIButton
-                  onClick={generateTagline}
-                  loading={aiLoading.tagline}
-                  tooltip="Generate tagline"
+                  onClick={generateTitle}
+                  loading={aiLoading.title}
+                  tooltip="Generate title"
                 />
               </div>
               <Input
@@ -426,9 +497,9 @@ export function ProductForm({ product, isEdit = false }) {
                 <div className="flex items-center gap-2 mb-2">
                   <Label htmlFor="tags">Tags (comma-separated)</Label>
                   <AIButton
-                    onClick={generateHashtags}
-                    loading={aiLoading.hashtags}
-                    tooltip="Generate hashtags with AI"
+                    onClick={generateTags}
+                    loading={aiLoading.tags}
+                    tooltip="Generate tags with AI"
                   />
                 </div>
                 <Input

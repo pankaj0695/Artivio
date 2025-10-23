@@ -203,7 +203,7 @@ Return only the description text, no headings."""
                 f"""{text}\n\n"""
                 "Rewrite now (no title, no bullet list):"
             )
-            expand_result = self._call_model(expand_prompt, max_output_tokens=420, temperature=0.4)
+            expand_result = self._call_model(expand_prompt, max_output_tokens=2048, temperature=0.4)
             if expand_result["text"] and len(expand_result["text"]) > len(text):
                 text = expand_result["text"].strip()
         return text
