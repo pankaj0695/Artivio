@@ -12,9 +12,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { format } from "date-fns";
+import { useStaticTranslation } from "@/lib/use-static-translation";
 
 export default function ArtisanOrdersPage() {
   const { user } = useAuth();
+  const { t } = useStaticTranslation();
   const queryClient = useQueryClient();
 
   // Fetch artisan orders
@@ -43,16 +45,16 @@ export default function ArtisanOrdersPage() {
   };
 
   if (isLoading) {
-    return <p className="text-center py-8">Loading orders...</p>;
+    return <p className="text-center py-8">{t("common.loading")}</p>;
   }
 
   if (!ordersData || ordersData.orders.length === 0) {
-    return <p className="text-center text-gray-500">No orders found.</p>;
+    return <p className="text-center text-gray-500">{t("orders.noOrders")}</p>;
   }
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <h1 className="text-3xl font-bold mb-6">Your Orders</h1>
+      <h1 className="text-3xl font-bold mb-6">{t("orders.title")}</h1>
 
       <div className="space-y-6">
         {ordersData.orders.map((order) => (

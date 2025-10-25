@@ -3,13 +3,16 @@
 import { RoleGuard } from '@/components/auth/role-guard';
 import { ProductForm } from '@/components/artisan/product-form';
 import { Card, CardContent } from "@/components/ui/card";
+import { useStaticTranslation } from "@/lib/use-static-translation";
 
 function NewProductContent() {
+  const { t } = useStaticTranslation();
+
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-6">
       <div className="mb-2">
-        <h1 className="text-4xl font-bold text-gray-900 mb-2">Add New Product</h1>
-        <p className="text-gray-600">Create a new product listing with AI-powered assistance</p>
+        <h1 className="text-4xl font-bold text-gray-900 mb-2">{t("addProduct.heading")}</h1>
+        <p className="text-gray-600">{t("addProduct.description")}</p>
       </div>
 
       <Card className="rounded-2xl border border-gray-200 bg-white shadow-sm">

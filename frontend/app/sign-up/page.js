@@ -21,6 +21,7 @@ import {
   createOrUpdateUserProfile,
 } from "@/lib/auth";
 import { Palette, UserPlus, Loader2 } from "lucide-react";
+import { useStaticTranslation } from "@/lib/use-static-translation";
 
 // Google "G" logo SVG
 function GoogleIcon({ className = "h-4 w-4" }) {
@@ -43,6 +44,7 @@ function GoogleIcon({ className = "h-4 w-4" }) {
 
 export default function SignUpPage() {
   const router = useRouter();
+  const { t } = useStaticTranslation();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [showRolePrompt, setShowRolePrompt] = useState(false);
@@ -63,7 +65,7 @@ export default function SignUpPage() {
     setError("");
 
     if (data.password !== data.confirmPassword) {
-      setError("Passwords do not match");
+      setError(t("auth.passwordMismatch"));
       setLoading(false);
       return;
     }
@@ -124,8 +126,8 @@ export default function SignUpPage() {
           <div className="flex justify-center mb-4">
             <Palette className="h-12 w-12 text-primary" />
           </div>
-          <CardTitle className="text-2xl font-bold">Join Artivio</CardTitle>
-          <p className="text-gray-600">Create your account to get started</p>
+          <CardTitle className="text-2xl font-bold">{t("auth.joinArtivio")}</CardTitle>
+          <p className="text-gray-600">{t("auth.createAccountDesc")}</p>
         </CardHeader>
 
         <CardContent className="space-y-6">
@@ -137,10 +139,10 @@ export default function SignUpPage() {
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div>
-              <Label htmlFor="name">Full Name</Label>
+              <Label htmlFor="name">{t("auth.firstName")}</Label>
               <Input
                 id="name"
-                {...register("name", { required: "Name is required" })}
+                {...register("name", { required: t("auth.nameRequired") })}
                 className="rounded-full"
               />
               {errors.name && (
@@ -151,11 +153,11 @@ export default function SignUpPage() {
             </div>
 
             <div>
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t("auth.email")}</Label>
               <Input
                 id="email"
                 type="email"
-                {...register("email", { required: "Email is required" })}
+                {...register("email", { required: t("auth.emailRequired") })}
                 className="rounded-full"
               />
               {errors.email && (
@@ -166,7 +168,7 @@ export default function SignUpPage() {
             </div>
 
             <div>
-              <Label htmlFor="role">I want to</Label>
+              <Label htmlFor="role">{t("auth.iWantTo")}</Label>
               {/* Keep Select controlled and sync with RHF */}
               <Select
                 value={selectedRole}
@@ -176,11 +178,11 @@ export default function SignUpPage() {
                 }}
               >
                 <SelectTrigger className="rounded-full">
-                  <SelectValue placeholder="Select your role" />
+                  <SelectValue placeholder={t("auth.selectRolePlaceholder")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="customer">Shop for crafts</SelectItem>
-                  <SelectItem value="artisan">Sell my crafts</SelectItem>
+                  <SelectItem value="customer">{t("auth.shopForCrafts")}</SelectItem>
+                  <SelectItem value="artisan">{t("auth.sellMyCrafts")}</SelectItem>
                 </SelectContent>
               </Select>
               {/* Ensure role is part of form data */}
@@ -188,15 +190,15 @@ export default function SignUpPage() {
             </div>
 
             <div>
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">{t("auth.password")}</Label>
               <Input
                 id="password"
                 type="password"
                 {...register("password", {
-                  required: "Password is required",
+                  required: t("auth.passwordRequired"),
                   minLength: {
                     value: 6,
-                    message: "Password must be at least 6 characters",
+                    message: t("auth.passwordMinLength"),
                   },
                 })}
                 className="rounded-full"
@@ -209,7 +211,7 @@ export default function SignUpPage() {
             </div>
 
             <div>
-              <Label htmlFor="confirmPassword">Confirm Password</Label>
+              <Label htmlFor="confirmPassword">{t("auth.confirmPassword")}</Label>
               <Input
                 id="confirmPassword"
                 type="password"
@@ -240,7 +242,7 @@ export default function SignUpPage() {
               ) : (
                 <>
                   <UserPlus className="h-4 w-4" />
-                  Create Account
+                  {t("auth.submitSignUp")}
                 </>
               )}
             </Button>
@@ -252,7 +254,7 @@ export default function SignUpPage() {
             </div>
             <div className="relative flex justify-center text-sm">
               <span className="px-2 bg-white text-gray-500">
-                Or continue with
+                {t("auth.or")} continue with
               </span>
             </div>
           </div>
@@ -267,7 +269,7 @@ export default function SignUpPage() {
             {loading ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
-                Connecting...
+                {t("auth.connecting")}
               </>
             ) : (
               <>
@@ -280,17 +282,17 @@ export default function SignUpPage() {
           {/* Role prompt (when shown) */}
           {showRolePrompt && (
             <div className="p-4 border border-gray-200 rounded-xl bg-white/80 backdrop-blur-sm space-y-3">
-              <p className="font-medium">Select your role to finish setup</p>
+              <p className="font-medium">{t("auth.selectRole")}</p>
               <Select
                 onValueChange={(v) => setSelectedRole(v)}
                 defaultValue={selectedRole}
               >
                 <SelectTrigger className="rounded-full">
-                  <SelectValue placeholder="Select your role" />
+                  <SelectValue placeholder={t("auth.selectRolePlaceholder")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="customer">Shop for crafts</SelectItem>
-                  <SelectItem value="artisan">Sell my crafts</SelectItem>
+                  <SelectItem value="customer">{t("auth.shopForCrafts")}</SelectItem>
+                  <SelectItem value="artisan">{t("auth.sellMyCrafts")}</SelectItem>
                 </SelectContent>
               </Select>
               <Button
@@ -299,18 +301,18 @@ export default function SignUpPage() {
                 className="w-full rounded-full"
                 size="lg"
               >
-                Confirm role
+                {t("auth.confirmRole")}
               </Button>
             </div>
           )}
 
           <div className="text-center text-sm text-gray-600">
-            Already have an account?{" "}
+            {t("auth.alreadyHaveAccount")}{" "}
             <Link
               href="/sign-in"
               className="font-medium text-primary hover:underline"
             >
-              Sign in
+              {t("auth.signIn")}
             </Link>
           </div>
         </CardContent>

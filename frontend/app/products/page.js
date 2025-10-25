@@ -10,17 +10,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { getProducts } from "@/lib/firestore";
-import { Search, Eye, ShoppingCart } from "lucide-react";
-import Image from "next/image";
-import Link from "next/link";
+import { Search } from "lucide-react";
 import { useCartStore } from "@/lib/store";
 import { toast } from "sonner";
 import { getArtisanPublic } from "@/lib/firestore";
 import { useEffect } from "react";
+import { useStaticTranslation } from "@/lib/use-static-translation";
+import { useLanguage } from "@/context/LanguageContext";
+import { ProductCard } from "@/components/products/product-card";
 
 const categories = [
   { value: "all", label: "All Categories" },
@@ -35,6 +33,8 @@ const categories = [
 ];
 
 export default function ProductsPage() {
+  const { t } = useStaticTranslation();
+  const { language } = useLanguage();
   const items = useCartStore((state) => state.items);
   const addItem = useCartStore((state) => state.addItem);
   const removeItem = useCartStore((state) => state.removeItem);
@@ -113,8 +113,6 @@ export default function ProductsPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-     
-
       {/* Container for all three sections */}
       <div className="flex justify-center gap-8">
         {/* Left Sidebar Filters */}
@@ -122,11 +120,13 @@ export default function ProductsPage() {
           <div className="sticky top-24 space-y-6 bg-white p-6 rounded-2xl shadow-sm border">
             {/* Search */}
             <div>
-              <h2 className="font-semibold text-gray-800 mb-3">Search</h2>
+              <h2 className="font-semibold text-gray-800 mb-3">
+                {t("products.search")}
+              </h2>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
                 <Input
-                  placeholder="Search listings..."
+                  placeholder={t("products.searchPlaceholder")}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10 rounded-full"
@@ -136,7 +136,9 @@ export default function ProductsPage() {
 
             {/* Category Filter */}
             <div>
-              <h2 className="font-semibold text-gray-800 mb-3">Category</h2>
+              <h2 className="font-semibold text-gray-800 mb-3">
+                {t("products.category")}
+              </h2>
               <Select
                 onValueChange={setSelectedCategory}
                 value={selectedCategory}
@@ -147,7 +149,13 @@ export default function ProductsPage() {
                 <SelectContent>
                   {categories.map((category) => (
                     <SelectItem key={category.value} value={category.value}>
-                      {category.label}
+                      {t(
+                        `categories.${
+                          category.value === "all"
+                            ? "allCategories"
+                            : category.value
+                        }`
+                      )}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -156,30 +164,44 @@ export default function ProductsPage() {
 
             {/* Type Filter */}
             <div>
-              <h2 className="font-semibold text-gray-800 mb-3">Type</h2>
+              <h2 className="font-semibold text-gray-800 mb-3">
+                {t("products.type")}
+              </h2>
               <Select onValueChange={setListingType} value={listingType}>
                 <SelectTrigger className="rounded-full">
                   <SelectValue placeholder="Listing Type" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All</SelectItem>
-                  <SelectItem value="product">Products</SelectItem>
-                  <SelectItem value="service">Services</SelectItem>
+                  <SelectItem value="all">{t("products.typeAll")}</SelectItem>
+                  <SelectItem value="product">
+                    {t("products.typeProduct")}
+                  </SelectItem>
+                  <SelectItem value="service">
+                    {t("products.typeService")}
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             {/* Sort By */}
             <div>
-              <h2 className="font-semibold text-gray-800 mb-3">Sort By</h2>
+              <h2 className="font-semibold text-gray-800 mb-3">
+                {t("products.sortBy")}
+              </h2>
               <Select onValueChange={setSortBy} value={sortBy}>
                 <SelectTrigger className="rounded-full">
                   <SelectValue placeholder="Sort by" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="newest">Newest</SelectItem>
-                  <SelectItem value="price-low">Price: Low to High</SelectItem>
-                  <SelectItem value="price-high">Price: High to Low</SelectItem>
+                  <SelectItem value="newest">
+                    {t("products.sortNewest")}
+                  </SelectItem>
+                  <SelectItem value="price-low">
+                    {t("products.sortPriceLow")}
+                  </SelectItem>
+                  <SelectItem value="price-high">
+                    {t("products.sortPriceHigh")}
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -205,118 +227,11 @@ export default function ProductsPage() {
               {filteredAndSortedProducts.map((product) => {
                 const isInCart = items.some((item) => item.id === product.id);
                 return (
-                  <Card
+                  <ProductCard
                     key={product.id}
-                    className="rounded-xl shadow-md hover:shadow-lg transition-all duration-200 border border-gray-200 w-[32rem]" // increased width
-                  >
-                    <CardContent className="p-6 space-y-4">
-                      {/* Artisan Info */}
-                      <div className="flex items-center gap-3 mb-3">
-                        <Link
-                          href={`/artisan/${product.artisanId}`}
-                          className="flex items-center gap-2 cursor-pointer"
-                        >
-                          <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-200 flex-shrink-0 border-2 border-primary">
-                            <Image
-                              src={
-                                artisansMap[product.artisanId]?.avatar ||
-                                "/default-avatar.png"
-                              }
-                              alt={
-                                artisansMap[product.artisanId]?.name ||
-                                "Unknown Artisan"
-                              }
-                              width={40}
-                              height={40}
-                              className="object-cover"
-                            />
-                          </div>
-                          <div className="flex flex-col">
-                            <span className="font-semibold text-gray-900 text-sm">
-                              {artisansMap[product.artisanId]?.name ||
-                                "Unknown Artisan"}
-                            </span>
-                            <span className="text-xs text-gray-500">
-                              Seller
-                            </span>
-                          </div>
-                        </Link>
-                      </div>
-
-                      {/* Product Image */}
-                      <div className="relative w-full aspect-[1/0.9] rounded-md overflow-hidden">
-                        {" "}
-                        {/* slightly taller image */}
-                        <Image
-                          src={product.images?.[0] || "/placeholder.png"}
-                          alt={product.title}
-                          fill
-                          className="object-cover"
-                        />
-                        <div className="absolute top-2 left-2">
-                          <Badge className="text-xs px-2 py-1">
-                            {product.type || "Product"}
-                          </Badge>
-                        </div>
-                      </div>
-
-                      {/* Product Info */}
-                      <div className="space-y-1">
-                        <h3 className="font-semibold text-gray-900 text-base line-clamp-2">
-                          {product.title}
-                        </h3>
-                        <p className="text-gray-600 text-xs line-clamp-3">
-                          {product.description}
-                        </p>
-                        <div className="font-bold text-sm text-primary">
-                          ₹{product.price}
-                        </div>
-                      </div>
-
-                      {/* Actions */}
-                      {/* Actions */}
-                      <div className="flex gap-2">
-                        <Link
-                          href={`/products/${product.id}`}
-                          className="flex-1"
-                        >
-                          <Button
-                            // removed variant="outline" to match primary buttons
-                            className="w-full rounded-full text-xs flex items-center justify-center gap-2 py-2.5 bg-primary text-white hover:bg-primary/90"
-                          >
-                            <Eye className="h-4 w-4" /> View
-                          </Button>
-                        </Link>
-
-                        {product.type === "service" ? (
-                          <Link
-                            href={{
-                              pathname: "/checkout/appointment",
-                              query: {
-                                productId: product.id,
-                                title: product.title,
-                                price: product.price,
-                                image: product.images?.[0] || "",
-                              },
-                            }}
-                            className="flex-1"
-                          >
-                            <Button className="w-full rounded-full text-xs flex items-center justify-center gap-2 py-2.5 bg-primary text-white hover:bg-primary/90">
-                              Book Appointment
-                            </Button>
-                          </Link>
-                        ) : (
-                          <Button
-                            onClick={() => handleToggleCart(product)}
-                            className="flex-1 rounded-full text-xs flex items-center justify-center gap-2 py-2.5 bg-primary text-white hover:bg-primary/90"
-                          >
-                            <ShoppingCart className="h-4 w-4" />{" "}
-                            {isInCart ? "Remove" : "Add"}
-                          </Button>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
+                    product={product}
+                    artisanInfo={artisansMap[product.artisanId]}
+                  />
                 );
               })}
             </div>
@@ -326,25 +241,27 @@ export default function ProductsPage() {
         {/* Right News Sidebar */}
         <aside className="lg:w-64 flex-shrink-0">
           <div className="sticky top-24 space-y-4 bg-white p-6 rounded-2xl shadow-sm border">
-            <h2 className="font-semibold text-gray-800 mb-3">Latest News</h2>
+            <h2 className="font-semibold text-gray-800 mb-3">
+              {t("products.latestNews")}
+            </h2>
             <div className="space-y-3">
               <div className="p-3 bg-gray-50 rounded-lg border border-gray-200 shadow-sm">
                 <p className="text-sm font-medium text-gray-900">
-                  New artisan marketplace feature launched!
+                  {t("products.news1")}
                 </p>
-                <span className="text-xs text-gray-500">Sep 20, 2025</span>
+                <span className="text-xs text-gray-500">{t("products.news1Date")}</span>
               </div>
               <div className="p-3 bg-gray-50 rounded-lg border border-gray-200 shadow-sm">
                 <p className="text-sm font-medium text-gray-900">
-                  Exclusive pottery workshop coming this week.
+                  {t("products.news2")}
                 </p>
-                <span className="text-xs text-gray-500">Sep 18, 2025</span>
+                <span className="text-xs text-gray-500">{t("products.news2Date")}</span>
               </div>
               <div className="p-3 bg-gray-50 rounded-lg border border-gray-200 shadow-sm">
                 <p className="text-sm font-medium text-gray-900">
-                  Jewelry artisans now verified with badges.
+                  {t("products.news3")}
                 </p>
-                <span className="text-xs text-gray-500">Sep 15, 2025</span>
+                <span className="text-xs text-gray-500">{t("products.news3Date")}</span>
               </div>
             </div>
           </div>

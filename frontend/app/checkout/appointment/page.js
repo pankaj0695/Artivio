@@ -8,9 +8,11 @@ import { useAuth } from "@/hooks/use-auth";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { createOrder } from "@/lib/firestore";
+import { useStaticTranslation } from "@/lib/use-static-translation";
 
 export default function AppointmentCheckoutPage() {
   const { user, loading } = useAuth();
+  const { t } = useStaticTranslation();
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -46,7 +48,7 @@ export default function AppointmentCheckoutPage() {
 
   const validateBooking = () => {
     if (!bookingDate) {
-      alert("Please select a booking date");
+      alert(t("appointmentCheckout.selectDate"));
       return false;
     }
     return true;
@@ -106,13 +108,13 @@ export default function AppointmentCheckoutPage() {
   const handlePaymentSuccess = async (paymentResponse) => {
     try {
       const isVerified = await verifyPayment(paymentResponse);
-      if (!isVerified) throw new Error("Payment verification failed");
+      if (!isVerified) throw new Error(t("appointmentCheckout.verificationFailed"));
 
       await createFirestoreAppointmentOrder(paymentResponse);
       router.push("/orders");
     } catch (error) {
       console.error(error);
-      alert("Payment successful but booking creation failed. Contact support.");
+      alert(t("appointmentCheckout.paymentSuccessError"));
     } finally {
       setIsProcessing(false);
     }
@@ -120,7 +122,7 @@ export default function AppointmentCheckoutPage() {
 
   const handlePaymentError = (error) => {
     console.error(error);
-    alert("Payment failed. Please try again.");
+    alert(t("appointmentCheckout.paymentFailed"));
     setIsProcessing(false);
   };
 
@@ -130,7 +132,7 @@ export default function AppointmentCheckoutPage() {
     setIsProcessing(true);
 
     try {
-      if (!window.Razorpay) throw new Error("Payment system not loaded.");
+      if (!window.Razorpay) throw new Error(t("appointmentCheckout.paymentSystemNotLoaded"));
 
       const razorpayOrder = await createRazorpayOrder();
 
@@ -139,7 +141,7 @@ export default function AppointmentCheckoutPage() {
         amount: razorpayOrder.amount,
         currency: razorpayOrder.currency,
         name: "Artivio",
-        description: "Appointment Booking",
+        description: t("appointmentCheckout.appointmentBooking"),
         order_id: razorpayOrder.id,
         handler: handlePaymentSuccess,
         prefill: { name: user.displayName || user.email, email: user.email },
@@ -152,27 +154,27 @@ export default function AppointmentCheckoutPage() {
       rzp.open();
     } catch (error) {
       console.error(error);
-      alert("Failed to book appointment. Please try again.");
+      alert(t("appointmentCheckout.bookingFailed"));
       setIsProcessing(false);
     }
   };
 
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-6">
-      <h1 className="text-3xl font-bold mb-6">Book Appointment</h1>
+      <h1 className="text-3xl font-bold mb-6">{t("appointmentCheckout.heading")}</h1>
 
       <Card className="rounded-2xl border border-gray-200 bg-white shadow-sm">
         <CardContent className="p-6 space-y-6">
           <h2 className="font-semibold text-lg mb-2">{productData.title}</h2>
 
           <label className="block font-semibold text-lg mb-2">
-            Select Booking Date
+            {t("appointmentCheckout.selectDate")}
           </label>
           <DatePicker
             selected={bookingDate}
             onChange={(date) => setBookingDate(date)}
             minDate={new Date()}
-            placeholderText="Select a date"
+            placeholderText={t("appointmentCheckout.selectDatePlaceholder")}
             className="border border-gray-300 p-2 w-full rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-black focus:border-black"
             dateFormat="dd/MM/yyyy"
           />
@@ -185,7 +187,7 @@ export default function AppointmentCheckoutPage() {
             aria-busy={isProcessing}
             aria-disabled={isProcessing}
           >
-            {isProcessing ? "Processing Payment..." : `Book & Pay ₹${productData.price}`}
+            {isProcessing ? t("appointmentCheckout.processing") : `${t("appointmentCheckout.bookAndPay")} ₹${productData.price}`}
           </Button>
         </CardContent>
       </Card>

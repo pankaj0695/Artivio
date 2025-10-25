@@ -10,10 +10,12 @@ import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 import { getArtisanPublic, upsertArtisanPublic } from "@/lib/firestore";
 import {uploadImageToCloudinary} from "@/lib/storage";
+import { useStaticTranslation } from "@/lib/use-static-translation";
 
 export default function ArtisanProfileEditorPage() {
   const router = useRouter();
   const { user, loading } = useAuth();
+  const { t } = useStaticTranslation();
 
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
@@ -103,44 +105,44 @@ export default function ArtisanProfileEditorPage() {
 
   const goToStorefront = () => router.push(`/artisan/${user?.uid}`);
 
-  if (loading) return <div className="p-6">Loading…</div>;
+  if (loading) return <div className="p-6">{t("common.loading")}</div>;
   if (!user) return null;
 
   return (
     <div className="max-w-3xl mx-auto p-6 space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Your Storefront</h1>
-        <Button variant="secondary" onClick={goToStorefront}>View Storefront</Button>
+        <h1 className="text-2xl font-bold">{t("artisanProfile.title")}</h1>
+        <Button variant="secondary" onClick={goToStorefront}>{t("artisanProfile.viewStorefront")}</Button>
       </div>
 
       <Card>
         <CardContent className="p-6 space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input
-              placeholder="Display name"
+              placeholder={t("artisanProfile.displayName")}
               value={form.displayName}
               onChange={(e) => setForm((f) => ({ ...f, displayName: e.target.value }))}
             />
             <Input
-              placeholder="Tagline"
+              placeholder={t("artisanProfile.tagline")}
               value={form.tagline}
               onChange={(e) => setForm((f) => ({ ...f, tagline: e.target.value }))}
             />
           </div>
           <Textarea
-            placeholder="Short bio/story"
+            placeholder={t("artisanProfile.bio")}
             value={form.bio}
             onChange={(e) => setForm((f) => ({ ...f, bio: e.target.value }))}
           />
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input
-              placeholder="City"
+              placeholder={t("artisanProfile.city")}
               value={form.locationCity}
               onChange={(e) => setForm((f) => ({ ...f, locationCity: e.target.value }))}
             />
             <Input
-              placeholder="Country"
+              placeholder={t("artisanProfile.country")}
               value={form.locationCountry}
               onChange={(e) => setForm((f) => ({ ...f, locationCountry: e.target.value }))}
             />
@@ -148,29 +150,29 @@ export default function ArtisanProfileEditorPage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <Input
-              placeholder="Instagram handle"
+              placeholder={t("artisanProfile.instagram")}
               value={form.instagram}
               onChange={(e) => setForm((f) => ({ ...f, instagram: e.target.value }))}
             />
             <Input
-              placeholder="Website URL"
+              placeholder={t("artisanProfile.website")}
               value={form.website}
               onChange={(e) => setForm((f) => ({ ...f, website: e.target.value }))}
             />
             <Input
-              placeholder="WhatsApp number"
+              placeholder={t("artisanProfile.whatsapp")}
               value={form.whatsapp}
               onChange={(e) => setForm((f) => ({ ...f, whatsapp: e.target.value }))}
             />
           </div>
 
           <Input
-            placeholder="Specialties (comma separated)"
+            placeholder={t("artisanProfile.specialties")}
             value={form.specialties}
             onChange={(e) => setForm((f) => ({ ...f, specialties: e.target.value }))}
           />
           <Input
-            placeholder="Materials (comma separated)"
+            placeholder={t("artisanProfile.materials")}
             value={form.materials}
             onChange={(e) => setForm((f) => ({ ...f, materials: e.target.value }))}
           />
@@ -182,11 +184,11 @@ export default function ArtisanProfileEditorPage() {
                 checked={form.acceptingCommissions}
                 onChange={(e) => setForm((f) => ({ ...f, acceptingCommissions: e.target.checked }))}
               />
-              Accepting custom orders
+              {t("artisanProfile.acceptingCommissions")}
             </label>
             <Input
               type="number"
-              placeholder="Starting price (₹)"
+              placeholder={t("artisanProfile.startingPrice")}
               value={form.startingPrice}
               onChange={(e) => setForm((f) => ({ ...f, startingPrice: e.target.value }))}
             />
@@ -194,7 +196,7 @@ export default function ArtisanProfileEditorPage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
   <div className="space-y-2">
-    <label className="text-sm font-medium">Avatar</label>
+    <label className="text-sm font-medium">{t("artisanProfile.avatar")}</label>
     {form.avatar && (
       <img
         src={form.avatar}
@@ -208,20 +210,20 @@ export default function ArtisanProfileEditorPage() {
       onChange={async (e) => {
         const file = e.target.files?.[0];
         if (!file) return;
-        toast.info("Uploading avatar...");
+        toast.info(t("artisanProfile.uploadingAvatar"));
         const { url, error } = await uploadImageToCloudinary(file, user?.uid, { tags: ["avatar"] });
         if (error) {
-          toast.error("Avatar upload failed: " + error);
+          toast.error(t("artisanProfile.avatarUploadFailed") + ": " + error);
         } else {
           setForm((f) => ({ ...f, avatar: url }));
-          toast.success("Avatar uploaded");
+          toast.success(t("artisanProfile.avatarUploaded"));
         }
       }}
     />
   </div>
 
   <div className="space-y-2">
-    <label className="text-sm font-medium">Cover Image</label>
+    <label className="text-sm font-medium">{t("artisanProfile.coverImage")}</label>
     {form.coverImage && (
       <img
         src={form.coverImage}
@@ -235,13 +237,13 @@ export default function ArtisanProfileEditorPage() {
       onChange={async (e) => {
         const file = e.target.files?.[0];
         if (!file) return;
-        toast.info("Uploading cover image...");
+        toast.info(t("artisanProfile.uploadingCover"));
         const { url, error } = await uploadImageToCloudinary(file, user?.uid, { tags: ["cover"] });
         if (error) {
-          toast.error("Cover upload failed: " + error);
+          toast.error(t("artisanProfile.coverUploadFailed") + ": " + error);
         } else {
           setForm((f) => ({ ...f, coverImage: url }));
-          toast.success("Cover uploaded");
+          toast.success(t("artisanProfile.coverUploaded"));
         }
       }}
     />
@@ -251,10 +253,10 @@ export default function ArtisanProfileEditorPage() {
 
           <div className="flex gap-3 justify-end pt-2">
             <Button variant="outline" onClick={save} disabled={saving}>
-              Save
+              {t("artisanProfile.save")}
             </Button>
             <Button onClick={save} disabled={saving}>
-              Save & Stay
+              {t("artisanProfile.saveAndStay")}
             </Button>
           </div>
         </CardContent>

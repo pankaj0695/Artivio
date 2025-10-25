@@ -1,6 +1,8 @@
 "use client";
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { LanguageProvider } from '@/context/LanguageContext';
+import { NextIntlClientProvider } from 'next-intl';
 import { useState } from 'react';
 
 export function Providers({ children }) {
@@ -13,8 +15,12 @@ export function Providers({ children }) {
   }));
 
   return (
-    <QueryClientProvider client={queryClient}>
-      {children}
-    </QueryClientProvider>
+    <NextIntlClientProvider locale="en" messages={{}}>
+      <LanguageProvider>
+        <QueryClientProvider client={queryClient}>
+          {children}
+        </QueryClientProvider>
+      </LanguageProvider>
+    </NextIntlClientProvider>
   );
 }

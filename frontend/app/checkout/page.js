@@ -8,10 +8,12 @@ import { useAuth } from "@/hooks/use-auth";
 import { useRouter } from "next/navigation";
 import { createOrder, getUserAddresses, addUserAddress } from "@/lib/firestore";
 import { Loader2 } from "lucide-react";
+import { useStaticTranslation } from "@/lib/use-static-translation";
 
 export default function CheckoutPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
+  const { t } = useStaticTranslation();
   const { items, getTotalPrice, clearCart } = useCartStore();
 
   const [addresses, setAddresses] = useState([]);
@@ -210,11 +212,11 @@ export default function CheckoutPage() {
 
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <h1 className="text-3xl font-bold mb-6">Checkout</h1>
+      <h1 className="text-3xl font-bold mb-6">{t("checkout.title")}</h1>
       
       <Card className="rounded-2xl border border-gray-200 bg-white shadow-md mb-6">
         <CardContent className="p-6 space-y-4">
-          <h2 className="font-semibold text-lg mb-2">Shipping Address</h2>
+          <h2 className="font-semibold text-lg mb-2">{t("checkout.shippingAddress")}</h2>
           {addresses.length > 0 && !showNewAddress && (
             <div className="space-y-2 mb-4">
               {addresses.map((address, idx) => (
@@ -235,7 +237,7 @@ export default function CheckoutPage() {
             onClick={() => setShowNewAddress((v) => !v)}
             className="mb-2 rounded-full border-2 hover:bg-white hover:shadow-md active:scale-[0.98] transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
           >
-            {showNewAddress ? "Cancel" : "Add New Address"}
+            {showNewAddress ? t("common.close") : t("checkout.billingAddress")}
           </Button>
           {showNewAddress && (
             <div className="space-y-2 mb-4">
@@ -255,10 +257,10 @@ export default function CheckoutPage() {
                 {savingAddress ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    Saving...
+                    {t("common.loading")}
                   </>
                 ) : (
-                  "Save Address"
+                  t("checkout.billingAddress")
                 )}
               </Button>
             </div>
@@ -269,11 +271,11 @@ export default function CheckoutPage() {
       <Card className="rounded-2xl border border-gray-200 bg-white shadow-md">
         <CardContent className="p-6 space-y-4">
           <div className="flex items-center justify-between">
-            <div>Items</div>
+            <div>{t("checkout.orderSummary")}</div>
             <div className="font-semibold">{items.length}</div>
           </div>
           <div className="flex items-center justify-between">
-            <div>Total</div>
+            <div>{t("cart.total")}</div>
             <div className="text-xl font-bold">
               ₹{getTotalPrice().toFixed(2)}
             </div>
@@ -288,10 +290,10 @@ export default function CheckoutPage() {
             {isProcessing ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
-                Processing Payment...
+                {t("common.loading")}
               </>
             ) : (
-              "Place Order"
+              t("checkout.placeOrder")
             )}
           </Button>
         </CardContent>

@@ -24,6 +24,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useRouter } from "next/navigation";
 import { Film, UploadCloud } from "lucide-react";
 import { BlockchainService } from "@/lib/blockchain";
+import { useStaticTranslation } from "@/lib/use-static-translation";
 
 const categories = [
   "pottery",
@@ -39,6 +40,7 @@ const categories = [
 export function ProductForm({ product, isEdit = false }) {
   const { user } = useAuth();
   const router = useRouter();
+  const { t } = useStaticTranslation();
   const [loading, setLoading] = useState(false);
   const [aiLoading, setAiLoading] = useState({});
   const [images, setImages] = useState(product?.images || []);
@@ -119,7 +121,7 @@ export function ProductForm({ product, isEdit = false }) {
 
   const generateVideo = async () => {
     if (images.length < 1) {
-      alert("Please upload at least 1 image before generating a video.");
+      alert(t("productForm.uploadImageFirst"));
       return;
     }
     const buildVideosEndpoint = () => {
@@ -144,21 +146,21 @@ export function ProductForm({ product, isEdit = false }) {
       console.log("Video generation response:", result);
       if (!resp.ok) {
         console.error("Video generation failed:", result);
-        alert(result?.message || "Failed to generate video.");
+        alert(result?.message || t("productForm.videoGenerationFailed"));
         return;
       }
       if (result.status === "uploaded" && result.cloudinary_url) {
         setValue("videoUrl", result.cloudinary_url, { shouldDirty: true });
       } else if (result.status === "timeout") {
-        alert("Video generation is still running. Please try again later.");
+        alert(t("productForm.videoStillRunning"));
       } else if (result.status === "done_no_video") {
-        alert("Generation finished but no video bytes were returned.");
+        alert(t("productForm.noVideoBytesReturned"));
       } else if (result.status === "error") {
-        alert(result.message || "Cloud upload failed.");
+        alert(result.message || t("productForm.cloudUploadFailed"));
       }
     } catch (e) {
       console.error("Video generate error:", e);
-      alert("An error occurred while generating the video.");
+      alert(t("productForm.uploadError"));
     } finally {
       setVideoGenerating(false);
     }
@@ -180,11 +182,11 @@ export function ProductForm({ product, isEdit = false }) {
         setValue("videoUrl", data.secure_url, { shouldDirty: true });
       } else {
         console.error("Cloudinary upload error:", data);
-        alert("Failed to upload video.");
+        alert(t("productForm.videoUploadFailed"));
       }
     } catch (err) {
       console.error("Upload failed:", err);
-      alert("Video upload failed.");
+      alert(t("productForm.videoUploadFailed"));
     } finally {
       setVideoUploading(false);
       // reset input value so same file can be selected again
@@ -326,7 +328,7 @@ export function ProductForm({ product, isEdit = false }) {
 
         setNftStatus({
           type: "success",
-          message: "Blockchain certificate created successfully!",
+          message: t("productForm.blockchainCertificateCreated"),
           tokenId: nftResult.tokenId,
           txHash: nftResult.txHash,
         });
@@ -341,7 +343,7 @@ export function ProductForm({ product, isEdit = false }) {
 
         setNftStatus({
           type: "error",
-          message: `Product saved, but blockchain certificate failed: ${nftResult.error}`,
+          message: t("productForm.blockchainCertificateFailed") + ": " + nftResult.error,
           canRetry: true,
           productId: productRef.id,
         });
@@ -352,7 +354,7 @@ export function ProductForm({ product, isEdit = false }) {
       console.error("Error saving product:", error);
       setNftStatus({
         type: "error",
-        message: "Failed to save product. Please try again.",
+        message: t("productForm.failedToSaveProduct"),
       });
     } finally {
       setLoading(false);
@@ -366,18 +368,18 @@ export function ProductForm({ product, isEdit = false }) {
         <CardTitle>
           {isEdit
             ? listingType === "service"
-              ? "Edit Service"
-              : "Edit Product"
+              ? t("productForm.edit") + " " + t("productForm.service")
+              : t("productForm.edit") + " " + t("productForm.product")
             : listingType === "service"
-            ? "Add New Service"
-            : "Add New Product"}
+            ? t("productForm.add") + " " + t("productForm.service")
+            : t("productForm.add") + " " + t("productForm.product")}
         </CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <div className="space-y-4">
             <div>
-              <Label htmlFor="type">Listing Type</Label>
+              <Label htmlFor="type">{t("productForm.listingType")}</Label>
               <Select
                 onValueChange={(value) =>
                   setValue("type", value, { shouldDirty: true })
@@ -388,8 +390,8 @@ export function ProductForm({ product, isEdit = false }) {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="product">Product</SelectItem>
-                  <SelectItem value="service">Service</SelectItem>
+                  <SelectItem value="product">{t("productForm.product")}</SelectItem>
+                  <SelectItem value="service">{t("productForm.service")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -397,18 +399,18 @@ export function ProductForm({ product, isEdit = false }) {
               <div className="flex items-center gap-2 mb-2">
                 <Label htmlFor="title">
                   {listingType === "service"
-                    ? "Service Title"
-                    : "Product Title"}
+                    ? t("productForm.serviceTitle")
+                    : t("productForm.productTitle")}
                 </Label>
                 <AIButton
                   onClick={generateTitle}
                   loading={aiLoading.title}
-                  tooltip="Generate title"
+                  tooltip={t("productForm.listingType")}
                 />
               </div>
               <Input
                 id="title"
-                {...register("title", { required: "Title is required" })}
+                {...register("title", { required: t("productForm.productTitle") + " is required" })}
                 error={errors.title?.message}
               />
             </div>
@@ -416,35 +418,35 @@ export function ProductForm({ product, isEdit = false }) {
             {listingType !== "service" && (
               <div>
                 <div className="flex items-center gap-2 mb-2">
-                  <Label htmlFor="tagline">Tagline</Label>
+                  <Label htmlFor="tagline">{t("productForm.tagline")}</Label>
                   <AIButton
                     onClick={generateTagline}
                     loading={aiLoading.tagline}
-                    tooltip="Generate tagline with AI"
+                    tooltip={t("productForm.tagline")}
                   />
                 </div>
                 <Input
                   id="tagline"
                   {...register("tagline")}
-                  placeholder="A catchy tagline for your product"
+                  placeholder={t("productForm.tagsPlaceholder")}
                 />
               </div>
             )}
 
             <div>
               <div className="flex items-center gap-2 mb-2">
-                <Label htmlFor="description">Description</Label>
+                <Label htmlFor="description">{t("productForm.description")}</Label>
                 <AIButton
                   onClick={generateDescription}
                   loading={aiLoading.description}
-                  tooltip="Generate description with AI"
+                  tooltip={t("productForm.description")}
                 />
               </div>
               <Textarea
                 id="description"
                 rows={4}
                 {...register("description", {
-                  required: "Description is required",
+                  required: t("productForm.description") + " is required",
                 })}
                 error={errors.description?.message}
               />
@@ -452,22 +454,22 @@ export function ProductForm({ product, isEdit = false }) {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="price">Price (₹)</Label>
+                <Label htmlFor="price">{t("productForm.price")}</Label>
                 <Input
                   id="price"
                   type="number"
                   step="0.01"
-                  {...register("price", { required: "Price is required" })}
+                  {...register("price", { required: t("productForm.price") + " is required" })}
                   error={errors.price?.message}
                 />
               </div>
               {listingType !== "service" && (
                 <div>
-                  <Label htmlFor="stock">Stock Quantity</Label>
+                  <Label htmlFor="stock">{t("productForm.stockQuantity")}</Label>
                   <Input
                     id="stock"
                     type="number"
-                    {...register("stock", { required: "Stock is required" })}
+                    {...register("stock", { required: t("productForm.stockQuantity") + " is required" })}
                     error={errors.stock?.message}
                   />
                 </div>
@@ -476,10 +478,10 @@ export function ProductForm({ product, isEdit = false }) {
 
             {listingType !== "service" && (
               <div>
-                <Label htmlFor="category">Category</Label>
+                <Label htmlFor="category">{t("productForm.category")}</Label>
                 <Select onValueChange={(value) => setValue("category", value)}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select a category" />
+                    <SelectValue placeholder={t("productForm.categoryPlaceholder")} />
                   </SelectTrigger>
                   <SelectContent>
                     {categories.map((category) => (
@@ -495,17 +497,17 @@ export function ProductForm({ product, isEdit = false }) {
             {listingType !== "service" && (
               <div>
                 <div className="flex items-center gap-2 mb-2">
-                  <Label htmlFor="tags">Tags (comma-separated)</Label>
+                  <Label htmlFor="tags">{t("productForm.tags")}</Label>
                   <AIButton
                     onClick={generateTags}
                     loading={aiLoading.tags}
-                    tooltip="Generate tags with AI"
+                    tooltip={t("productForm.tags")}
                   />
                 </div>
                 <Input
                   id="tags"
                   {...register("tags")}
-                  placeholder="handmade, pottery, ceramic"
+                  placeholder={t("productForm.tagsPlaceholder")}
                 />
               </div>
             )}
@@ -514,12 +516,12 @@ export function ProductForm({ product, isEdit = false }) {
               <div className="flex items-center justify-between">
                 <Label>
                   {listingType === "service"
-                    ? "Images (optional)"
-                    : "Product Images"}
+                    ? t("productForm.imagesOptional")
+                    : t("productForm.images")}
                 </Label>
                 {listingType !== "service" && (
                   <span className="text-xs text-red-600">
-                    Required for video generation
+                    {t("productForm.requiredForVideo")}
                   </span>
                 )}
               </div>
@@ -530,7 +532,7 @@ export function ProductForm({ product, isEdit = false }) {
               />
               {listingType !== "service" && images.length === 0 && (
                 <p className="text-xs text-red-600 mt-1">
-                  Please upload at least one image.
+                  {t("productForm.uploadRequired")}
                 </p>
               )}
             </div>
@@ -539,7 +541,7 @@ export function ProductForm({ product, isEdit = false }) {
               <div>
                 <div className="flex items-center gap-4 mb-2">
                   <Label htmlFor="videoUrl" className="mr-auto">
-                    Video
+                    {t("productForm.video")}
                   </Label>
                   <Button
                     type="button"
@@ -548,7 +550,7 @@ export function ProductForm({ product, isEdit = false }) {
                     disabled={videoGenerating || images.length === 0}
                   >
                     <Film className="h-4 w-4 mr-2" />
-                    {videoGenerating ? "Generating…" : "Generate Video"}
+                    {videoGenerating ? t("productForm.generating") : t("productForm.generateVideo")}
                   </Button>
                   <div>
                     <label
@@ -558,7 +560,7 @@ export function ProductForm({ product, isEdit = false }) {
                           : "cursor-pointer"
                       }`}
                     >
-                      <UploadCloud className="h-4 w-4 mr-2" /> Upload Video
+                      <UploadCloud className="h-4 w-4 mr-2" /> {t("productForm.uploadVideo")}
                       <input
                         type="file"
                         accept="video/*"
@@ -572,18 +574,18 @@ export function ProductForm({ product, isEdit = false }) {
                 <Input
                   id="videoUrl"
                   {...register("videoUrl")}
-                  placeholder="Optional video URL"
+                  placeholder={t("productForm.videoUrl")}
                 />
                 {videoGenerating && (
                   <div className="mt-3">
                     <div className="w-full h-48 rounded-lg bg-gray-200 animate-pulse" />
                     <p className="text-sm text-gray-600 mt-2">
-                      Generating your video (about 1-2 minutes)…
+                      {t("productForm.generatingVideo")}
                     </p>
                   </div>
                 )}
                 {videoUploading && (
-                  <p className="text-sm text-gray-600 mt-2">Uploading video…</p>
+                  <p className="text-sm text-gray-600 mt-2">{t("productForm.uploadingVideo")}</p>
                 )}
                 {videoPreviewUrl && (
                   <div className="mt-3">
@@ -600,12 +602,12 @@ export function ProductForm({ product, isEdit = false }) {
             {listingType == "product" && (
               // Add this to your form fields in ProductForm component
               <div>
-                <Label htmlFor="artisanWallet">Blockchain Wallet Address</Label>
+                <Label htmlFor="artisanWallet">{t("productForm.wallet")}</Label>
                 <Input
                   id="artisanWallet"
                   {...register("artisanWallet", {
                     required:
-                      "Wallet address is required for blockchain certificate",
+                      t("productForm.wallet") + " is required for blockchain certificate",
                     pattern: {
                       value: /^0x[a-fA-F0-9]{40}$/,
                       message: "Please enter a valid Ethereum wallet address",
@@ -615,19 +617,18 @@ export function ProductForm({ product, isEdit = false }) {
                   error={errors.artisanWallet?.message}
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  This address will receive NFT royalties. Make sure you control
-                  this wallet.
+                  {t("productForm.walletDescription")}
                 </p>
               </div>
             )}
 
             {listingType === "service" && (
               <div>
-                <Label htmlFor="bookingUrl">Booking/Contact URL</Label>
+                <Label htmlFor="bookingUrl">{t("productForm.bookingUrl")}</Label>
                 <Input
                   id="bookingUrl"
                   {...register("bookingUrl", {
-                    required: "Booking URL is required for services",
+                    required: t("productForm.bookingUrlRequired"),
                   })}
                   placeholder="https://wa.me/91XXXXXXXXXX or Calendly link"
                 />
@@ -640,14 +641,14 @@ export function ProductForm({ product, isEdit = false }) {
             )}
 
             <div>
-              <Label htmlFor="status">Status</Label>
+              <Label htmlFor="status">{t("productForm.status")}</Label>
               <Select onValueChange={(value) => setValue("status", value)}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="draft">Draft</SelectItem>
+                  <SelectItem value="active">{t("productForm.active")}</SelectItem>
+                  <SelectItem value="draft">{t("productForm.draft")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -661,10 +662,10 @@ export function ProductForm({ product, isEdit = false }) {
                   <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
                   <div>
                     <p className="text-sm font-medium text-blue-900">
-                      Creating Blockchain Certificate
+                      {t("productForm.creatingBlockchainCertificate")}
                     </p>
                     <p className="text-xs text-blue-700">
-                      {nftStatus || "Please wait..."}
+                      {nftStatus || t("productForm.pleaseWait")}
                     </p>
                   </div>
                 </div>
@@ -695,10 +696,10 @@ export function ProductForm({ product, isEdit = false }) {
                   {nftStatus.type === "success" && (
                     <div className="text-xs space-y-1">
                       <p>
-                        <strong>Token ID:</strong> {nftStatus.tokenId}
+                        <strong>{t("productForm.tokenId")}:</strong> {nftStatus.tokenId}
                       </p>
                       <p>
-                        <strong>Transaction:</strong>{" "}
+                        <strong>{t("productForm.transaction")}:</strong>{" "}
                         <a
                           href={BlockchainService.getPolygonScanUrl(
                             nftStatus.txHash
@@ -707,7 +708,7 @@ export function ProductForm({ product, isEdit = false }) {
                           rel="noopener noreferrer"
                           className="text-blue-600 hover:underline"
                         >
-                          View on PolygonScan
+                          {t("productForm.viewOnPolygonScan")}
                         </a>
                       </p>
                     </div>
@@ -721,7 +722,7 @@ export function ProductForm({ product, isEdit = false }) {
                       onClick={() => retryNFTMinting(nftStatus.productId)}
                       className="mt-2"
                     >
-                      Retry Blockchain Certificate
+                      {t("productForm.retryBlockchainCertificate")}
                     </Button>
                   )}
                 </div>
@@ -732,23 +733,23 @@ export function ProductForm({ product, isEdit = false }) {
           <div className="flex gap-4">
             <Button type="submit" disabled={loading} className="flex-1">
               {nftMinting
-                ? "Creating Certificate..."
+                ? t("productForm.creatingCertificate")
                 : loading
-                ? "Saving..."
+                ? t("productForm.saving")
                 : isEdit
                 ? listingType === "service"
-                  ? "Update Service"
-                  : "Update Product"
+                  ? t("productForm.updateService")
+                  : t("productForm.updateProduct")
                 : listingType === "service"
-                ? "Create Service"
-                : "Create Product"}
+                ? t("productForm.createService")
+                : t("productForm.createProduct")}
             </Button>
             <Button
               type="button"
               variant="outline"
               onClick={() => router.back()}
             >
-              Cancel
+              {t("productForm.cancel")}
             </Button>
           </div>
         </form>

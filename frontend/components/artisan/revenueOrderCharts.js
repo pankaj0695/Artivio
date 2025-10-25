@@ -21,8 +21,10 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { AIButton } from "@/components/ai/ai-button";
 import { getGeminiAnalysis } from "@/lib/gemini";
 import { ArrowLeft } from "lucide-react";
+import { useStaticTranslation } from "@/lib/use-static-translation";
 
 function RevenueOrdersChart({ orders }) {
+  const { t } = useStaticTranslation();
   const [metric, setMetric] = useState("revenue");
   const [duration, setDuration] = useState("15");
   const [showAnalysis, setShowAnalysis] = useState(false);
@@ -85,7 +87,7 @@ function RevenueOrdersChart({ orders }) {
       setAnalysis(response);
       setShowAnalysis(true);
     } catch (err) {
-      setAnalysis("Error fetching analysis.");
+      setAnalysis(t("analytics.errorFetchingAnalysis"));
       setShowAnalysis(true);
     } finally {
       setLoading(false);
@@ -95,27 +97,27 @@ function RevenueOrdersChart({ orders }) {
   return (
     <Card className="rounded-2xl border-0 shadow-sm mt-8">
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>Analytics</CardTitle>
+        <CardTitle>{t("analytics.title")}</CardTitle>
         <div className="flex items-center space-x-2">
           {/* Metric dropdown (for graph only) */}
           <Select value={metric} onValueChange={setMetric}>
             <SelectTrigger className="w-[120px]">
-              <SelectValue placeholder="Metric" />
+              <SelectValue placeholder={t("analytics.metric")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="revenue">Revenue</SelectItem>
-              <SelectItem value="orders">Orders</SelectItem>
+              <SelectItem value="revenue">{t("analytics.revenue")}</SelectItem>
+              <SelectItem value="orders">{t("analytics.orders")}</SelectItem>
             </SelectContent>
           </Select>
 
           {/* Duration dropdown */}
           <Select value={duration} onValueChange={setDuration}>
             <SelectTrigger className="w-[120px]">
-              <SelectValue placeholder="Duration" />
+              <SelectValue placeholder={t("analytics.duration")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="15">Last 15 Days</SelectItem>
-              <SelectItem value="30">Last 30 Days</SelectItem>
+              <SelectItem value="15">{t("analytics.last15Days")}</SelectItem>
+              <SelectItem value="30">{t("analytics.last30Days")}</SelectItem>
             </SelectContent>
           </Select>
 
@@ -123,7 +125,7 @@ function RevenueOrdersChart({ orders }) {
           <AIButton
             onClick={fetchAnalysis}
             loading={loading}
-            tooltip="Explain with AI"
+            tooltip={t("analytics.explainWithAI")}
           />
         </div>
       </CardHeader>
@@ -135,7 +137,7 @@ function RevenueOrdersChart({ orders }) {
             <button
               onClick={() => setShowAnalysis(false)}
               className="absolute top-2 left-2 text-gray-600 hover:text-black"
-              title="Back to Chart"
+              title={t("analytics.backToChart")}
             >
               <ArrowLeft size={20} />
             </button>
@@ -166,7 +168,7 @@ function RevenueOrdersChart({ orders }) {
             </LineChart>
           </ResponsiveContainer>
         ) : (
-          <p className="text-gray-500 text-center py-8">No data available</p>
+          <p className="text-gray-500 text-center py-8">{t("analytics.noData")}</p>
         )}
       </CardContent>
     </Card>

@@ -13,9 +13,11 @@ import Link from "next/link";
 import Image from "next/image";
 import { Plus, Search, Edit, Eye } from "lucide-react";
 import { ViewsBadge } from "@/components/artisan/views-badge";
+import { useStaticTranslation } from "@/lib/use-static-translation";
 
 function ProductsContent() {
   const { user } = useAuth();
+  const { t } = useStaticTranslation();
   const [searchTerm, setSearchTerm] = useState("");
 
   const { data: productsData, isLoading } = useQuery({
@@ -33,13 +35,13 @@ function ProductsContent() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-4xl font-bold text-gray-900">My Products</h1>
-          <p className="text-gray-600 mt-2">Manage your product catalog</p>
+          <h1 className="text-4xl font-bold text-gray-900">{t("myProducts.title")}</h1>
+          <p className="text-gray-600 mt-2">{t("myProducts.description")}</p>
         </div>
         <Link href="/artisan/products/new">
           <Button className="rounded-full flex items-center justify-center gap-2">
             <Plus className="h-4 w-4" />
-            Add Product
+            {t("myProducts.addProduct")}
           </Button>
         </Link>
       </div>
@@ -48,7 +50,7 @@ function ProductsContent() {
         <div className="relative max-w-md">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
           <Input
-            placeholder="Search products..."
+            placeholder={t("myProducts.searchPlaceholder")}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10 rounded-full"
@@ -74,17 +76,17 @@ function ProductsContent() {
               <Plus className="h-16 w-16 text-gray-300 mx-auto" />
             </div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">
-              No products found
+              {t("myProducts.noProductsFound")}
             </h3>
             <p className="text-gray-600 mb-6">
               {searchTerm
-                ? "Try adjusting your search terms"
-                : "Start by adding your first product"}
+                ? t("myProducts.adjustSearch")
+                : t("myProducts.startAddingFirst")}
             </p>
             <Link href="/artisan/products/new">
               <Button className="rounded-full flex items-center gap-2">
                 <Plus className="h-4 w-4" />
-                <span>Add Product</span>
+                <span>{t("myProducts.addProduct")}</span>
               </Button>
             </Link>
           </div>
@@ -119,7 +121,7 @@ function ProductsContent() {
                 {(product.type || "product") !== "service" &&
                   product.stock < 10 && (
                     <div className="absolute top-3 right-3">
-                      <Badge className="bg-red-500">Low Stock</Badge>
+                      <Badge className="bg-red-500">{t("myProducts.lowStock")}</Badge>
                     </div>
                   )}
               </div>
@@ -139,7 +141,7 @@ function ProductsContent() {
                     <ViewsBadge productId={product.id} />
                     {(product.type || "product") !== "service" && (
                       <span className="text-sm text-gray-500">
-                        Stock: {product.stock}
+                        {t("myProducts.stock")}: {product.stock}
                       </span>
                     )}
                   </div>
@@ -153,7 +155,7 @@ function ProductsContent() {
                       className="w-full rounded-full flex items-center justify-center"
                     >
                       <Eye className="h-4 w-4 mr-2" />
-                      <span>View</span>
+                      <span>{t("myProducts.view")}</span>
                     </Button>
                   </Link>
 
@@ -166,7 +168,7 @@ function ProductsContent() {
                       className="w-full rounded-full flex items-center justify-center"
                     >
                       <Edit className="h-4 w-4 mr-2" />
-                      <span>Edit</span>
+                      <span>{t("myProducts.edit")}</span>
                     </Button>
                   </Link>
                 </div>

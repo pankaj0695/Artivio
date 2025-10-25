@@ -13,6 +13,7 @@ import { doc, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase"; 
 import { logout } from "@/lib/auth.js"; 
 import { useRouter } from "next/navigation";
+import { useStaticTranslation } from "@/lib/use-static-translation";
 
 
 // Badge colors for statuses
@@ -30,6 +31,7 @@ const trackingSteps = ["processing", "shipped", "out-for-delivery", "delivered"]
 
 export default function ProfilePage() {
   const { user, profile } = useAuth();
+  const { t } = useStaticTranslation();
   const [activeTab, setActiveTab] = useState("orders");
   const [selectedOrder, setSelectedOrder] = useState(null);
 
@@ -97,7 +99,7 @@ const handleLogout = async () => {
   if (!user) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-20 text-center text-lg text-gray-700">
-        Please sign in to view your profile.
+        {t("auth.signIn")} to view your profile.
       </div>
     );
   }
@@ -105,7 +107,7 @@ const handleLogout = async () => {
   if (loadingOrders) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-20 text-center text-lg text-gray-700">
-        Loading your orders...
+        {t("common.loading")}
       </div>
     );
   }
@@ -113,7 +115,7 @@ const handleLogout = async () => {
   if (error) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-20 text-center text-lg text-red-600">
-        Error loading orders: {error}
+        {t("common.error")}: {error}
       </div>
     );
   }
@@ -139,26 +141,26 @@ const handleLogout = async () => {
         <div className="mt-6 space-y-2">
           <SidebarItem
             icon={Package}
-            label="Orders"
+            label={t("dashboard.myOrders")}
             isActive={activeTab === "orders"}
             onClick={() => setActiveTab("orders")}
           />
           <SidebarItem
             icon={Heart}
-            label="Wishlist"
+            label={t("profile.wishlist")}
             isActive={activeTab === "wishlist"}
             onClick={() => setActiveTab("wishlist")}
           />
           <SidebarItem
             icon={UserPen}
-            label="Update Profile"
+            label={t("profile.editProfile")}
             isActive={activeTab === "updateProfile"}
             onClick={() => setActiveTab("updateProfile")}
           />
           <div className="border-t my-4" />
           <SidebarItem
   icon={LogOut}
-  label="Logout"
+  label={t("common.logout")}
   className="text-red-600 hover:bg-red-100"
   onClick={handleLogout} // <-- connect logout function
 />
@@ -180,14 +182,15 @@ const handleLogout = async () => {
                 activeOrders={activeOrders}
                 pastOrders={pastOrders}
                 setSelectedOrder={setSelectedOrder}
+                t={t}
               />
             )}
 
-            {activeTab === "wishlist" && <EmptyState message="Your wishlist is empty." />}
+            {activeTab === "wishlist" && <EmptyState message={t("profile.wishlistEmpty")} />}
 
             {activeTab === "updateProfile" && (
               <div>
-                <h2 className="text-2xl font-bold mb-4">Update Your Profile</h2>
+                <h2 className="text-2xl font-bold mb-4">{t("profile.editProfile")}</h2>
                 <UpdateProfileInline />
               </div>
             )}
@@ -226,7 +229,7 @@ function SidebarItem({ icon: Icon, label, isActive, onClick, className = "" }) {
 }
 
 // ---------- OrdersSection ----------
-function OrdersSection({ activeOrders, pastOrders, setSelectedOrder }) {
+function OrdersSection({ activeOrders, pastOrders, setSelectedOrder, t }) {
   const [tab, setTab] = useState("active");
 
   const formatDate = (date) => {
@@ -237,7 +240,7 @@ function OrdersSection({ activeOrders, pastOrders, setSelectedOrder }) {
 
   return (
     <div>
-      <h2 className="text-2xl font-bold mb-4">Your Orders</h2>
+      <h2 className="text-2xl font-bold mb-4">{t("dashboard.myOrders")}</h2>
       <div className="flex gap-4 mb-6">
         <button
           onClick={() => setTab("active")}
@@ -245,7 +248,7 @@ function OrdersSection({ activeOrders, pastOrders, setSelectedOrder }) {
             tab === "active" ? "bg-black text-white" : "bg-gray-200 text-gray-700"
           }`}
         >
-          Active Orders
+          {t("profile.activeOrders")}
           <span className="ml-2 text-sm bg-gray-100 text-gray-800 px-2 py-0.5 rounded-full">
             {activeOrders.length}
           </span>
@@ -256,7 +259,7 @@ function OrdersSection({ activeOrders, pastOrders, setSelectedOrder }) {
             tab === "history" ? "bg-black text-white" : "bg-gray-200 text-gray-700"
           }`}
         >
-          Order History
+          {t("profile.orderHistory")}
           <span className="ml-2 text-sm bg-gray-100 text-gray-800 px-2 py-0.5 rounded-full">
             {pastOrders.length}
           </span>

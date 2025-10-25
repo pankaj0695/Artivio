@@ -18,9 +18,11 @@ import Link from "next/link";
 import RevenueOrdersChart from "@/components/artisan/revenueOrderCharts";
 import { Plus, Package, ShoppingBag, Calendar } from "lucide-react";
 import { ViewsBadge } from "@/components/artisan/views-badge";
+import { useStaticTranslation } from "@/lib/use-static-translation";
 
 function DashboardContent() {
   const { user } = useAuth();
+  const { t } = useStaticTranslation();
 
   const { data: statsData } = useQuery({
     queryKey: ["artisan-stats", user?.uid],
@@ -73,16 +75,16 @@ function DashboardContent() {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-4xl font-bold text-gray-900">Dashboard</h1>
+          <h1 className="text-4xl font-bold text-gray-900">{t("dashboard.heading")}</h1>
           <p className="text-gray-600 mt-2">
-            Welcome back! Here&apos;s an overview of your business.
+            {t("dashboard.welcomeMessage")}
           </p>
         </div>
 
         <Link href="/artisan/products/new">
           <Button className="rounded-full flex items-center bg-black text-white hover:bg-black/90 active:bg-black/80 active:scale-[.99] focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black transition-colors disabled:opacity-60">
             <Plus className="mr-2 h-5 w-5" />
-            <span>Add Product</span>
+            <span>{t("dashboard.addProduct")}</span>
           </Button>
         </Link>
       </div>
@@ -102,14 +104,14 @@ function DashboardContent() {
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="flex items-center">
               <Package className="mr-2 h-5 w-5" />
-              Recent Products
+              {t("dashboard.recentProducts")}
             </CardTitle>
             <Link href="/artisan/products">
               <Button
                 size="sm"
                 className="rounded-full flex items-center bg-black text-white hover:bg-black/90 active:bg-black/80 active:scale-[.99] focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black transition-colors disabled:opacity-60"
               >
-                View All
+                {t("dashboard.viewAll")}
               </Button>
             </Link>
           </CardHeader>
@@ -154,7 +156,7 @@ function DashboardContent() {
             ) : (
               <div className="text-center py-8">
                 <Package className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                <p className="text-gray-500">No products yet</p>
+                <p className="text-gray-500">{t("dashboard.noProducts")}</p>
               </div>
             )}
           </CardContent>
@@ -165,14 +167,14 @@ function DashboardContent() {
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="flex items-center">
               <Package className="mr-2 h-5 w-5" />
-              Recent Services
+              {t("dashboard.recentServices")}
             </CardTitle>
             <Link href="/artisan/services">
               <Button
                 size="sm"
                 className="rounded-full flex items-center bg-black text-white hover:bg-black/90 active:bg-black/80 active:scale-[.99] focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black transition-colors disabled:opacity-60"
               >
-                View All
+                {t("dashboard.viewAll")}
               </Button>
             </Link>
           </CardHeader>
@@ -217,7 +219,7 @@ function DashboardContent() {
             ) : (
               <div className="text-center py-8">
                 <Package className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                <p className="text-gray-500">No services yet</p>
+                <p className="text-gray-500">{t("dashboard.noServices")}</p>
               </div>
             )}
           </CardContent>
@@ -228,14 +230,14 @@ function DashboardContent() {
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="flex items-center">
               <ShoppingBag className="mr-2 h-5 w-5" />
-              Recent Orders
+              {t("dashboard.recentOrders")}
             </CardTitle>
             <Link href="/artisan/orders">
               <Button
                 size="sm"
                 className="rounded-full flex items-center bg-black text-white hover:bg-black/90 active:bg-black/80 active:scale-[.99] focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black transition-colors disabled:opacity-60"
               >
-                View All
+                {t("dashboard.viewAll")}
               </Button>
             </Link>
           </CardHeader>
@@ -270,7 +272,7 @@ function DashboardContent() {
                       <div className="flex-1">
                         <h4 className="font-medium">{firstItem?.title}</h4>
                         <p className="text-sm text-gray-600">
-                          Buyer: {buyerName} {buyerEmail && `• ${buyerEmail}`}
+                          {t("dashboard.buyer")}: {buyerName} {buyerEmail && `• ${buyerEmail}`}
                         </p>
                         <p className="text-sm text-gray-600">
                           ₹{order.amount} {order.currency} •{" "}
@@ -294,7 +296,7 @@ function DashboardContent() {
             ) : (
               <div className="text-center py-8">
                 <ShoppingBag className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                <p className="text-gray-500">No orders yet</p>
+                <p className="text-gray-500">{t("dashboard.noOrders")}</p>
               </div>
             )}
           </CardContent>
@@ -305,14 +307,14 @@ function DashboardContent() {
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="flex items-center">
               <Calendar className="mr-2 h-5 w-5" />
-              Recent Appointments
+              {t("dashboard.recentAppointments")}
             </CardTitle>
             <Link href="/artisan/appointments">
               <Button
                 size="sm"
                 className="rounded-full flex items-center bg-black text-white hover:bg-black/90 active:bg-black/80 active:scale-[.99] focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black transition-colors disabled:opacity-60"
               >
-                View All
+                {t("dashboard.viewAll")}
               </Button>
             </Link>
           </CardHeader>
@@ -350,7 +352,7 @@ function DashboardContent() {
                           {customerName} {customerEmail && `• ${customerEmail}`}
                         </p>
                         <p className="text-sm text-gray-600">
-                          Appointment Date: {formatDate(appt.bookingDate)}
+                          {t("dashboard.appointmentDate")}: {formatDate(appt.bookingDate)}
                         </p>
                       </div>
                     </Link>
@@ -360,7 +362,7 @@ function DashboardContent() {
             ) : (
               <div className="text-center py-8">
                 <Calendar className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                <p className="text-gray-500">No appointments yet</p>
+                <p className="text-gray-500">{t("dashboard.noAppointments")}</p>
               </div>
             )}
           </CardContent>
@@ -372,7 +374,7 @@ function DashboardContent() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
         <Card className="rounded-2xl border border-gray-200 bg-white shadow-sm">
           <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
+            <CardTitle>{t("dashboard.quickActions")}</CardTitle>
           </CardHeader>
           <CardContent className="grid grid-cols-1 gap-4">
             <Link href="/artisan/products/new">
@@ -381,7 +383,7 @@ function DashboardContent() {
                 className="w-full justify-start rounded-full flex items-center border-gray-300 text-gray-800 hover:bg-black hover:text-white hover:border-black focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-2 active:scale-95 transition"
               >
                 <Plus className="mr-2 h-5 w-5 flex-shrink-0" />
-                <span>Add New Product</span>
+                <span>{t("dashboard.addNewProduct")}</span>
               </Button>
             </Link>
 
@@ -391,7 +393,7 @@ function DashboardContent() {
                 className="w-full justify-start rounded-full flex items-center border-gray-300 text-gray-800 hover:bg-black hover:text-white hover:border-black focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-2 active:scale-95 transition"
               >
                 <Package className="mr-2 h-5 w-5 flex-shrink-0" />
-                <span>Manage Products</span>
+                <span>{t("dashboard.manageProducts")}</span>
               </Button>
             </Link>
 
@@ -401,7 +403,7 @@ function DashboardContent() {
                 className="w-full justify-start rounded-full flex items-center border-gray-300 text-gray-800 hover:bg-black hover:text-white hover:border-black focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-2 active:scale-95 transition"
               >
                 <ShoppingBag className="mr-2 h-5 w-5 flex-shrink-0" />
-                <span>View Orders</span>
+                <span>{t("dashboard.viewOrders")}</span>
               </Button>
             </Link>
           </CardContent>

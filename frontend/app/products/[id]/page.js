@@ -13,6 +13,9 @@ import { getProduct } from "@/lib/firestore";
 import { Star, Package, Truck } from "lucide-react";
 import { toast } from "sonner";
 import { labelProductPage } from "@/lib/analytics";
+import { useStaticTranslation } from "@/lib/use-static-translation";
+import { useLanguage } from "@/context/LanguageContext";
+import { useTranslatedContent } from "@/lib/use-translated-content";
 
 // Swiper imports
 import { Swiper, SwiperSlide } from "swiper/react";
@@ -24,6 +27,8 @@ import "swiper/css/pagination";
 export default function ProductDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const { t } = useStaticTranslation();
+  const { language } = useLanguage();
 
   const items = useCartStore((state) => state.items);
   const addItem = useCartStore((state) => state.addItem);
@@ -36,6 +41,10 @@ export default function ProductDetailPage() {
 
   // Compute product reference early so hooks can use it
   const product = data?.product;
+  
+  // Translate product title and description dynamically
+  const { translated: translatedTitle } = useTranslatedContent(product?.title || "", language);
+  const { translated: translatedDesc } = useTranslatedContent(product?.description || "", language);
 
   // Update analytics label and document title when product is ready
   useEffect(() => {
@@ -52,17 +61,17 @@ export default function ProductDetailPage() {
 
   // After hooks are declared, render based on loading/error states
   if (isLoading) return <LoadingPage />;
-  if (error || !product) return <div>Product not found</div>;
+  if (error || !product) return <div>{t("productDetail.notFound")}</div>;
   const isInCart = items.some((item) => item.id === product.id);
   const isService = (product.type || "product") === "service";
 
   const handleToggleCart = () => {
     if (isInCart) {
       removeItem(product.id);
-      toast.error(`${product.title} removed from cart`);
+      toast.error(`${translatedTitle || product.title} ${t("productDetail.removedFromCart")}`);
     } else {
       addItem(product);
-      toast.success(`${product.title} added to cart`);
+      toast.success(`${translatedTitle || product.title} ${t("productDetail.addedToCart")}`);
     }
   };
 
@@ -121,10 +130,10 @@ export default function ProductDetailPage() {
         <div className="space-y-6">
           <div>
             <Badge className="mb-4 capitalize">
-              {isService ? "Appointment" : product.category || "Product"}
+              {isService ? t("productDetail.appointment") : product.category || t("common.products")}
             </Badge>
             <h1 className="text-4xl font-bold text-gray-900 mb-2">
-              {product.title}
+              {translatedTitle || product.title}
             </h1>
             {product.tagline && (
               <p className="text-xl text-gray-600 mb-4">{product.tagline}</p>
@@ -137,7 +146,7 @@ export default function ProductDetailPage() {
                 <Badge
                   variant={product.stock > 10 ? "secondary" : "destructive"}
                 >
-                  {product.stock} in stock
+                  {product.stock} {t("productDetail.inStock")}
                 </Badge>
               )}
             </div>
@@ -145,7 +154,7 @@ export default function ProductDetailPage() {
 
           <div className="prose max-w-none">
             <p className="text-gray-700 leading-relaxed">
-              {product.description}
+              {translatedDesc || product.description}
             </p>
           </div>
 
@@ -166,7 +175,7 @@ export default function ProductDetailPage() {
                 size="lg"
                 className="w-full rounded-full text-lg py-6 bg-black text-white hover:bg-black/90 active:bg-black/80 active:scale-[.99] focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black transition-colors"
               >
-                Book Appointment
+                {t("productDetail.bookAppointment")}
               </Button>
             ) : (
               <Button
@@ -175,7 +184,7 @@ export default function ProductDetailPage() {
                 className="w-full rounded-full text-lg py-6 bg-black text-white hover:bg-black/90 active:bg-black/80 active:scale-[.99] focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black transition-colors disabled:opacity-60 disabled:pointer-events-none"
                 disabled={product.stock === 0 && !isInCart}
               >
-                {isInCart ? "Remove from Cart" : "Add to Cart"}
+                {isInCart ? t("productDetail.removeFromCart") : t("productDetail.addToCart")}
               </Button>
             )}
 
@@ -183,15 +192,15 @@ export default function ProductDetailPage() {
               <Card className="rounded-2xl">
                 <CardContent className="p-4 text-center">
                   <Package className="h-6 w-6 mx-auto mb-2 text-primary" />
-                  <p className="text-sm font-medium">Handcrafted</p>
-                  <p className="text-xs text-gray-600">Made to order</p>
+                  <p className="text-sm font-medium">{t("productDetail.handcrafted")}</p>
+                  <p className="text-xs text-gray-600">{t("productDetail.madeToOrder")}</p>
                 </CardContent>
               </Card>
               <Card className="rounded-2xl">
                 <CardContent className="p-4 text-center">
                   <Truck className="h-6 w-6 mx-auto mb-2 text-primary" />
-                  <p className="text-sm font-medium">Free Shipping</p>
-                  <p className="text-xs text-gray-600">Orders over ₹2000</p>
+                  <p className="text-sm font-medium">{t("productDetail.freeShipping")}</p>
+                  <p className="text-xs text-gray-600">{t("productDetail.ordersOver")}</p>
                 </CardContent>
               </Card>
             </div>
@@ -200,15 +209,15 @@ export default function ProductDetailPage() {
           {/* Artisan Info */}
           <Card className="rounded-2xl">
             <CardContent className="p-6">
-              <h3 className="font-semibold text-lg mb-2">Meet the Artisan</h3>
+              <h3 className="font-semibold text-lg mb-2">{t("productDetail.meetTheArtisan")}</h3>
               <div className="flex items-center space-x-3">
                 <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center text-white font-semibold">
                   A
                 </div>
                 <div>
-                  <p className="font-medium">Artisan Profile</p>
+                  <p className="font-medium">{t("productDetail.artisanProfile")}</p>
                   <p className="text-sm text-gray-600">
-                    Handcrafting since 2015
+                    {t("productDetail.handcraftingSince")}
                   </p>
                 </div>
                 <div className="ml-auto flex items-center">

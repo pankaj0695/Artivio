@@ -1,28 +1,30 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Package, AlertTriangle, ShoppingBag, TrendingUp } from 'lucide-react';
+import { useStaticTranslation } from '@/lib/use-static-translation';
 
 export function DashboardKPIs({ stats }) {
+  const { t } = useStaticTranslation();
   const kpis = [
     {
-      title: 'Total Products',
+      title: t("dashboardKPIs.totalProducts"),
       value: stats?.totalProducts || 0,
       icon: Package,
       color: 'text-blue-600',
     },
     {
-      title: 'Low Stock Items',
+      title: t("dashboardKPIs.lowStockItems"),
       value: stats?.lowStockProducts || 0,
       icon: AlertTriangle,
       color: 'text-orange-600',
     },
     {
-      title: 'Total Orders',
+      title: t("dashboardKPIs.totalOrders"),
       value: stats?.totalOrders || 0,
       icon: ShoppingBag,
       color: 'text-green-600',
     },
     {
-      title: 'Revenue',
+      title: t("dashboardKPIs.revenue"),
       value: `₹${(stats?.totalRevenue || 0).toLocaleString()}`,
       icon: TrendingUp,
       color: 'text-purple-600',

@@ -9,10 +9,12 @@ import { Minus, Plus, Trash2, ShoppingBag, Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useStaticTranslation } from "@/lib/use-static-translation";
 
 export default function CartPage() {
   const { user } = useAuth();
   const router = useRouter();
+  const { t } = useStaticTranslation();
   const { items, updateQuantity, removeItem, getTotalPrice, clearCart } =
     useCartStore();
   const [checkingOut, setCheckingOut] = useState(false);
@@ -34,17 +36,17 @@ export default function CartPage() {
         <div className="text-center">
           <ShoppingBag className="h-16 w-16 text-gray-300 mx-auto mb-6" />
           <h1 className="text-3xl font-bold text-gray-900 mb-4">
-            Your cart is empty
+            {t("cart.empty")}
           </h1>
           <p className="text-gray-600 mb-8">
-            Start shopping to add items to your cart
+            {t("cart.emptyDesc")}
           </p>
           <Link href="/products">
             <Button
               size="lg"
               className="rounded-full inline-flex items-center justify-center gap-2 bg-black text-white shadow-md hover:shadow-lg hover:bg-black/90 active:scale-[0.98] transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
             >
-              Continue Shopping
+              {t("cart.continueShopping")}
             </Button>
           </Link>
         </div>
@@ -54,7 +56,7 @@ export default function CartPage() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <h1 className="text-3xl font-bold text-gray-900 mb-8">Shopping Cart</h1>
+      <h1 className="text-3xl font-bold text-gray-900 mb-8">{t("cart.title")}</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-4">
@@ -132,16 +134,16 @@ export default function CartPage() {
 
               <div className="space-y-2 mb-4">
                 <div className="flex justify-between">
-                  <span>Subtotal</span>
+                  <span>{t("cart.subtotal")}</span>
                   <span>₹{getTotalPrice().toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Shipping</span>
+                  <span>{t("cart.shipping")}</span>
                   <span className="text-green-600">Free</span>
                 </div>
                 <div className="border-t pt-2">
                   <div className="flex justify-between font-semibold text-lg">
-                    <span>Total</span>
+                    <span>{t("cart.total")}</span>
                     <span>₹{getTotalPrice().toFixed(2)}</span>
                   </div>
                 </div>
@@ -160,7 +162,7 @@ export default function CartPage() {
                     Redirecting...
                   </>
                 ) : (
-                  "Proceed to Checkout"
+                  t("cart.checkout")
                 )}
               </Button>
 
@@ -169,7 +171,7 @@ export default function CartPage() {
                   variant="outline"
                   className="w-full rounded-full inline-flex items-center justify-center gap-2 border-2 hover:bg-white hover:shadow-md active:scale-[0.98] transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                 >
-                  Continue Shopping
+                  {t("cart.continueShopping")}
                 </Button>
               </Link>
             </CardContent>

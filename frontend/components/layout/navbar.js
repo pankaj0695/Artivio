@@ -9,12 +9,15 @@ import { useAuth } from "@/hooks/use-auth";
 import { useCartStore } from "@/lib/store";
 import { logout } from "@/lib/auth";
 import { motion } from "framer-motion";
+import { LanguageSwitcher } from "@/components/language-switcher";
+import { useStaticTranslation } from "@/lib/use-static-translation";
 
 export function Navbar() {
   const { user, profile } = useAuth();
   const getTotalItems = useCartStore((state) => state.getTotalItems);
   const router = useRouter();
   const pathname = usePathname(); // current route for toggle active state
+  const { t } = useStaticTranslation();
 
   const [mobileOpen, setMobileOpen] = useState(false);
   const [imageError, setImageError] = useState(false);
@@ -52,15 +55,15 @@ export function Navbar() {
   // Build tabs (includes My Store/Dashboard when artisan)
   const myStoreHref = user?.uid ? `/artisan/${user.uid}` : "/artisan/profile";
   const tabs = [
-    { key: "home", label: "Home", href: "/" },
-    { key: "products", label: "Products & Services", href: "/products" },
-    { key: "artisans", label: "Artisans", href: "/artisans" },
+    { key: "home", label: t("navbar.home"), href: "/" },
+    { key: "products", label: t("navbar.productsServices"), href: "/products" },
+    { key: "artisans", label: t("navbar.artisans"), href: "/artisans" },
     ...(profile?.role === "artisan"
       ? [
-          { key: "store", label: "My Store", href: myStoreHref },
-          { key: "dashboard", label: "Dashboard", href: "/artisan/dashboard" },
+          { key: "store", label: t("navbar.myStore"), href: myStoreHref },
+          { key: "dashboard", label: t("navbar.dashboard"), href: "/artisan/dashboard" },
         ]
-      : [{ key: "profile", label: "Profile", href: "/profile" }]),
+      : [{ key: "profile", label: t("navbar.profile"), href: "/profile" }]),
   ];
 
   const isActiveTab = (href) => {
@@ -141,12 +144,12 @@ export function Navbar() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="h-16 flex items-center justify-between">
           {/* Brand */}
-          <Link href="/" className="flex items-center gap-2 group" aria-label="Artivio home">
+          <Link href="/" className="flex items-center gap-2 group" aria-label={t("navbar.brandHome")}>
             <div className="h-10 w-10 grid place-items-center rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 text-primary ring-1 ring-primary/25 group-hover:from-primary/30 group-hover:to-primary/15 transition-colors">
               <Palette className="h-5 w-5" />
             </div>
             <span className="font-semibold text-xl sm:text-2xl tracking-tight text-slate-900 group-hover:text-slate-950 transition-colors">
-              Artivio
+              {t("navbar.brand")}
             </span>
           </Link>
 
@@ -155,10 +158,13 @@ export function Navbar() {
 
           {/* Actions */}
           <div className="flex items-center gap-2">
+            {/* Language Switcher */}
+            <LanguageSwitcher />
+
             <Link
               href="/cart"
               className="relative inline-flex items-center justify-center h-11 w-11 rounded-full hover:bg-slate-50 text-slate-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
-              aria-label="Cart"
+              aria-label={t("navbar.cart")}
             >
               <ShoppingCart className="h-5 w-5" />
 
@@ -180,7 +186,7 @@ export function Navbar() {
                 <Link
                   href="/profile"
                   className="h-11 w-11 rounded-full overflow-hidden bg-slate-100 flex items-center justify-center border border-slate-200 hover:border-slate-300 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
-                  aria-label="Profile"
+                  aria-label={t("navbar.profile")}
                 >
                   {/* Keep nodes stable; toggle visibility only */}
                   <img
@@ -201,8 +207,8 @@ export function Navbar() {
                   size="icon"
                   className="h-11 w-11 rounded-full hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-primary/30"
                   onClick={handleLogout}
-                  aria-label="Sign out"
-                  title="Sign out"
+                  aria-label={t("navbar.signOut")}
+                  title={t("navbar.signOut")}
                 >
                   <LogOut className="h-5 w-5 text-slate-700" />
                 </Button>
@@ -214,12 +220,12 @@ export function Navbar() {
                     variant="ghost"
                     className="rounded-full hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-primary/30 text-[15px] sm:text-base font-semibold"
                   >
-                    Sign In
+                    {t("navbar.signIn")}
                   </Button>
                 </Link>
                 <Link href="/sign-up">
                   <Button className="rounded-full shadow-sm hover:shadow focus-visible:ring-2 focus-visible:ring-primary/30 text-[15px] sm:text-base font-semibold">
-                    Sign Up
+                    {t("navbar.signUp")}
                   </Button>
                 </Link>
               </div>
@@ -232,7 +238,7 @@ export function Navbar() {
               aria-controls="mobile-menu"
               aria-expanded={mobileOpen}
               onClick={() => setMobileOpen((s) => !s)}
-              aria-label={mobileOpen ? "Close menu" : "Open menu"}
+              aria-label={mobileOpen ? t("navbar.closeMenu") : t("navbar.openMenu")}
             >
               {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
@@ -253,7 +259,7 @@ export function Navbar() {
             className="block px-3 py-2 rounded-lg text-base font-semibold text-slate-700 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
             onClick={() => setMobileOpen(false)}
           >
-            Products & Services
+            {t("navbar.productsServices")}
           </Link>
 
           {profile?.role === "artisan" ? (
@@ -262,7 +268,7 @@ export function Navbar() {
               className="block px-3 py-2 rounded-lg text-base font-semibold text-slate-700 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
               onClick={() => setMobileOpen(false)}
             >
-              My Store
+              {t("navbar.myStore")}
             </Link>
           ) : (
             <Link
@@ -270,7 +276,7 @@ export function Navbar() {
               className="block px-3 py-2 rounded-lg text-base font-semibold text-slate-700 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
               onClick={() => setMobileOpen(false)}
             >
-              Artisans
+              {t("navbar.artisans")}
             </Link>
           )}
 
@@ -280,7 +286,7 @@ export function Navbar() {
               className="block px-3 py-2 rounded-lg text-base font-semibold text-slate-700 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
               onClick={() => setMobileOpen(false)}
             >
-              Dashboard
+              {t("navbar.dashboard")}
             </Link>
           )}
 
@@ -293,7 +299,7 @@ export function Navbar() {
                   onClick={() => setMobileOpen(false)}
                 >
                   <User className="h-5 w-5 text-slate-600" />
-                  <span>Profile</span>
+                  <span>{t("navbar.profile")}</span>
                 </Link>
                 <button
                   onClick={() => {
@@ -303,7 +309,7 @@ export function Navbar() {
                   className="w-full text-left flex items-center gap-3 px-3 py-2 rounded-lg text-base text-slate-700 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
                 >
                   <LogOut className="h-5 w-5 text-slate-600" />
-                  <span>Sign out</span>
+                  <span>{t("navbar.signOut")}</span>
                 </button>
               </div>
             ) : (
@@ -313,12 +319,12 @@ export function Navbar() {
                     variant="ghost"
                     className="w-full rounded-full hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-primary/30 text-base font-semibold"
                   >
-                    Sign In
+                    {t("navbar.signIn")}
                   </Button>
                 </Link>
                 <Link href="/sign-up" className="flex-1">
                   <Button className="w-full rounded-full shadow-sm hover:shadow focus-visible:ring-2 focus-visible:ring-primary/30 text-base font-semibold">
-                    Sign Up
+                    {t("navbar.signUp")}
                   </Button>
                 </Link>
               </div>

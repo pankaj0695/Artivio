@@ -11,16 +11,25 @@ import { getArtisanPublic, listPortfolio } from "@/lib/firestore";
 import { getProducts } from "@/lib/firestore";
 import { Share2, MessageCircle, Pencil } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import { useStaticTranslation } from "@/lib/use-static-translation";
+import { useLanguage } from "@/context/LanguageContext";
+import { useTranslatedContent } from "@/lib/use-translated-content";
 
 export default function ArtisanPublicProfilePage() {
   const params = useParams();
   const uid = params?.uid;
   const { user } = useAuth();
+  const { t } = useStaticTranslation();
+  const { language } = useLanguage();
   const [profile, setProfile] = useState(null);
   const [portfolio, setPortfolio] = useState([]);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [services, setServices] = useState([]);
+
+  // Translate artisan bio dynamically
+  const { translated: translatedBio } = useTranslatedContent(profile?.bio || "", language);
+  const { translated: translatedTagline } = useTranslatedContent(profile?.tagline || "", language);
 
   useEffect(() => {
     if (!uid) return;
@@ -40,8 +49,8 @@ export default function ArtisanPublicProfilePage() {
     })();
   }, [uid]);
 
-  if (loading) return <div className="p-8">Loading…</div>;
-  if (!profile) return <div className="p-8">Profile not found.</div>;
+  if (loading) return <div className="p-8">{t("artisanProfile.loading")}</div>;
+  if (!profile) return <div className="p-8">{t("artisanProfile.profileNotFound")}</div>;
 
   const share = () => {
     if (typeof window !== "undefined") {
@@ -65,7 +74,7 @@ export default function ArtisanPublicProfilePage() {
             </div>
             <div className="flex-1">
               <h1 className="text-2xl font-bold">{profile.displayName}</h1>
-              {profile.tagline && <p className="text-muted-foreground">{profile.tagline}</p>}
+              {profile.tagline && <p className="text-muted-foreground">{translatedTagline || profile.tagline}</p>}
               <div className="mt-2 flex flex-wrap gap-2">
                 {(profile.specialties || []).slice(0, 6).map((s) => (
                   <Badge key={s} variant="secondary">{s}</Badge>
@@ -79,7 +88,7 @@ export default function ArtisanPublicProfilePage() {
                   className="rounded-full bg-black text-white hover:bg-black/90 active:bg-black/80 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black transition-colors"
                 >
                   <a href={`https://wa.me/${profile.socials.whatsapp}`} target="_blank" rel="noreferrer">
-                    <MessageCircle className="mr-2 h-4 w-4" /> Contact
+                    <MessageCircle className="mr-2 h-4 w-4" /> {t("artisanProfile.contact")}
                   </a>
                 </Button>
               )}
@@ -87,18 +96,18 @@ export default function ArtisanPublicProfilePage() {
                 onClick={share}
                 className="rounded-full bg-black text-white hover:bg-black/90 active:bg-black/80 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black transition-colors"
               >
-                <Share2 className="mr-2 h-4 w-4" /> Share
+                <Share2 className="mr-2 h-4 w-4" /> {t("artisanProfile.share")}
               </Button>
               {user?.uid === uid && (
                 <Link href="/artisan/profile">
                   <Button className="rounded-full bg-black text-white hover:bg-black/90 active:bg-black/80 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black transition-colors">
-                    <Pencil className="mr-2 h-4 w-4" /> Edit Profile
+                    <Pencil className="mr-2 h-4 w-4" /> {t("artisanProfile.editProfile")}
                   </Button>
                 </Link>
               )}
             </div>
           </div>
-          {profile.bio && <p className="mt-4 text-sm text-muted-foreground">{profile.bio}</p>}
+          {profile.bio && <p className="mt-4 text-sm text-muted-foreground">{translatedBio || profile.bio}</p>}
         </CardContent>
       </Card>
 

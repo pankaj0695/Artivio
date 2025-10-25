@@ -1,11 +1,15 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ArrowRight, Star, Users, Palette } from "lucide-react";
+import { useStaticTranslation } from "@/lib/use-static-translation";
 
 export default function HomePage() {
+  const { t } = useStaticTranslation();
   const featuredProducts = [
     {
       id: 1,
@@ -37,10 +41,10 @@ export default function HomePage() {
   ];
 
   const categories = [
-    { name: "Pottery", icon: "🏺", count: "120+ items" },
-    { name: "Textiles", icon: "🧵", count: "85+ items" },
-    { name: "Jewelry", icon: "💍", count: "95+ items" },
-    { name: "Woodwork", icon: "🪵", count: "67+ items" },
+    { name: t("categories.pottery"), icon: "🏺", count: t("home.potteryCount") },
+    { name: t("categories.textiles"), icon: "🧵", count: t("home.textilesCount") },
+    { name: t("categories.jewelry"), icon: "💍", count: t("home.jewelryCount") },
+    { name: t("categories.woodwork"), icon: "🪵", count: t("home.woodworkCount") },
   ];
 
   return (
@@ -58,20 +62,13 @@ export default function HomePage() {
             <div className="space-y-8">
               <div className="space-y-4">
                 <Badge className="bg-blue-100 text-black rounded-full px-4 py-2">
-                  ✨ AI-Powered Marketplace
+                  {t("home.badge")}
                 </Badge>
                 <h1 className="text-5xl lg:text-6xl font-bold text-black leading-tight">
-                  Discover
-                  <span className="text-black">
-                    {" "}
-                    Artisan{" "}
-                  </span>
-                  Crafts
+                  {t("home.heading")}
                 </h1>
                 <p className="text-xl text-black leading-relaxed">
-                  Connect with talented artisans and discover unique,
-                  handcrafted pieces. Our AI-powered platform helps artisans
-                  showcase their work beautifully.
+                  {t("home.description")}
                 </p>
               </div>
 
@@ -83,7 +80,7 @@ export default function HomePage() {
              hover:bg-white hover:text-black hover:shadow-lg hover:-translate-y-1 
              active:translate-y-0 focus-visible:ring-2 focus-visible:ring-black/20 
              transition-all duration-300 ease-in-out"              >
-                    Shop Now 
+                    {t("home.shopNow")}
                   </Button>
                 </Link>
                 <Link href="/sign-up">
@@ -94,7 +91,7 @@ className="rounded-full px-8 py-6 text-lg bg-black text-white border border-blac
              hover:bg-white hover:text-black hover:shadow-lg hover:-translate-y-1 
              active:translate-y-0 focus-visible:ring-2 focus-visible:ring-black/20 
              transition-all duration-300 ease-in-out"                  >
-                    Become an Artisan
+                    {t("home.becomeArtisan")}
                   </Button>
                 </Link>
               </div>
@@ -102,15 +99,15 @@ className="rounded-full px-8 py-6 text-lg bg-black text-white border border-blac
               <div className="flex items-center space-x-8 pt-4 rounded-xl bg-white/60 supports-[backdrop-filter]:bg-white/50 backdrop-blur px-4 py-3 ring-1 ring-white/60 shadow-sm">
                 <div className="text-center">
                   <div className="text-2xl font-bold text-black">500+</div>
-                  <div className="text-black">Artisans</div>
+                  <div className="text-black">{t("home.artisansCount")}</div>
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-black">2,000+</div>
-                  <div className="text-black">Products</div>
+                  <div className="text-black">{t("home.productsCount")}</div>
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-black">4.9</div>
-                  <div className="text-black">Rating</div>
+                  <div className="text-black">{t("home.ratingLabel")}</div>
                 </div>
               </div>
             </div>
@@ -180,10 +177,10 @@ className="rounded-full px-8 py-6 text-lg bg-black text-white border border-blac
           <div className="text-center mb-16">
 
             <h2 className="text-4xl font-bold text-black mb-3 tracking-tight">
-              Browse Categories
+              {t("home.browseCategories")}
             </h2>
             <p className="text-lg text-black max-w-2xl mx-auto">
-              Explore our diverse collection of handcrafted items
+              {t("home.browseDescription")}
             </p>
           </div>
 
@@ -220,10 +217,10 @@ className="rounded-full px-8 py-6 text-lg bg-black text-white border border-blac
           <div className="text-center mb-16">
  
             <h2 className="text-4xl font-bold text-black mb-3 tracking-tight">
-              Featured Products
+              {t("home.featuredProducts")}
             </h2>
             <p className="text-lg text-black max-w-2xl mx-auto">
-              Discover handpicked pieces from our talented artisans
+              {t("home.featuredDescription")}
             </p>
           </div>
 
@@ -264,7 +261,7 @@ className="rounded-full px-8 py-6 text-lg bg-black text-white border border-blac
                       size="sm"
                       className="rounded-full bg-white text-black border border-black/15 hover:bg-neutral-50 hover:-translate-y-0.5 active:translate-y-0 shadow-sm hover:shadow focus-visible:ring-2 focus-visible:ring-black/20 transition-all"
                     >
-                      View Details
+                      {t("products.viewDetails")}
                     </Button>
                   </div>
                 </CardContent>
@@ -279,7 +276,7 @@ className="rounded-full px-8 py-6 text-lg bg-black text-white border border-blac
                 variant="outline"
                 className="rounded-full px-8 bg-white text-black border border-black/20 hover:bg-neutral-50 hover:-translate-y-0.5 active:translate-y-0 shadow-sm hover:shadow focus-visible:ring-2 focus-visible:ring-black/20 transition-all"
               >
-                View All Products
+                {t("home.viewAllProducts")}
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </Link>
@@ -296,7 +293,7 @@ className="rounded-full px-8 py-6 text-lg bg-black text-white border border-blac
           <div className="text-center mb-16">
 
             <h2 className="text-4xl font-bold text-black tracking-tight">
-              Why Artivio
+              {t("home.whyArtivio")}
             </h2>
           </div>
 
@@ -306,11 +303,10 @@ className="rounded-full px-8 py-6 text-lg bg-black text-white border border-blac
                 <Palette className="h-8 w-8 text-blue-600" />
               </div>
               <h3 className="text-xl font-semibold mb-4 text-black">
-                AI-Powered Discovery
+                {t("home.aiPowered")}
               </h3>
               <p className="text-black">
-                Our AI helps artisans create compelling product descriptions,
-                videos, and showcase their work beautifully.
+                {t("home.aiPoweredDesc")}
               </p>
             </div>
             <div className="rounded-2xl ring-1 ring-slate-200/70 shadow-sm p-8 text-center hover:shadow-md transition-shadow">
@@ -318,11 +314,10 @@ className="rounded-full px-8 py-6 text-lg bg-black text-white border border-blac
                 <Users className="h-8 w-8 text-blue-600" />
               </div>
               <h3 className="text-xl font-semibold mb-4 text-black">
-                Direct from Artisans
+                {t("home.directFromArtisans")}
               </h3>
               <p className="text-black">
-                Shop directly from skilled artisans and support traditional
-                craftsmanship while getting authentic pieces.
+                {t("home.directDesc")}
               </p>
             </div>
             <div className="rounded-2xl ring-1 ring-slate-200/70 shadow-sm p-8 text-center hover:shadow-md transition-shadow">
@@ -330,11 +325,10 @@ className="rounded-full px-8 py-6 text-lg bg-black text-white border border-blac
                 <Star className="h-8 w-8 text-green-600" />
               </div>
               <h3 className="text-xl font-semibold mb-4 text-black">
-                Quality Guaranteed
+                {t("home.qualityGuaranteed")}
               </h3>
               <p className="text-black">
-                Every product is carefully curated and quality-checked to ensure
-                you get the best handcrafted items.
+                {t("home.qualityDesc")}
               </p>
             </div>
           </div>
