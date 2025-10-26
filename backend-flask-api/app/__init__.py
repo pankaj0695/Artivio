@@ -7,6 +7,14 @@ from __future__ import annotations
 from flask import Flask, jsonify
 from flask_cors import CORS
 from .config import Config
+try:
+    # Load environment variables from a .env file if present (searches upwards)
+    from dotenv import load_dotenv, find_dotenv  # type: ignore
+
+    load_dotenv(find_dotenv(), override=False)
+except Exception:
+    # python-dotenv is optional; if not installed, env vars must be provided by the process
+    pass
 
 
 def create_app() -> Flask:
@@ -39,8 +47,10 @@ def create_app() -> Flask:
     from .routes.videos import videos_bp
     from .routes.content import content_bp
     from .routes.pricing import pricing_bp
+    from .routes.ads_routes import ads_bp
 
     app.register_blueprint(health_bp)  # /health (no /api prefix)
+    app.register_blueprint(ads_bp)
     app.register_blueprint(images_bp, url_prefix="/api/images")
     app.register_blueprint(videos_bp, url_prefix="/api/videos")
     app.register_blueprint(content_bp, url_prefix="/api/content")
