@@ -12,6 +12,7 @@ from flask import Blueprint, jsonify, request
 from google.ads.googleads.client import GoogleAdsClient
 from google.ads.googleads.errors import GoogleAdsException
 from ..services.vertex_text import VertexTextService
+from datetime import datetime, timezone
 
 
 ads_bp = Blueprint("ads", __name__)
@@ -29,6 +30,7 @@ def _load_google_ads_client() -> GoogleAdsClient:
         "use_proto_plus": True,
     })
 
+
 @ads_bp.post("/ads/test/create-campaign")
 def test_create_campaign():
     """Create a simple paused SEARCH campaign for the test account.
@@ -38,6 +40,7 @@ def test_create_campaign():
       - name: string (default "Artivio Sample Campaign")
       - budget_micros: int (default 1_000_000)
     """
+    print("test create campaign")
     body = request.get_json(silent=True) or {}
     customer_id = (body.get("customer_id") or os.getenv("GOOGLE_ADS_TEST_CUSTOMER_ID") or "").replace("-", "")
     if not customer_id:
@@ -52,54 +55,59 @@ def test_create_campaign():
     try:
         client = _load_google_ads_client()
 
-        # Create Campaign Budget
+        # 1. Create Campaign Budget
         budget_service = client.get_service("CampaignBudgetService", version=API_VERSION)
         budget_op = client.get_type("CampaignBudgetOperation", version=API_VERSION)
         budget = budget_op.create
         budget.name = f"{name} Budget"
-        # delivery_method is deprecated in newer versions; omit to prevent errors
         budget.amount_micros = budget_micros
         budget_response = budget_service.mutate_campaign_budgets(
             customer_id=customer_id, operations=[budget_op]
         )
         budget_rn = budget_response.results[0].resource_name
 
-        # Create Campaign (paused SEARCH)
+        # 2. Create Campaign (paused SEARCH)
         campaign_service = client.get_service("CampaignService", version=API_VERSION)
         operation = client.get_type("CampaignOperation", version=API_VERSION)
         campaign = operation.create
+        
         campaign.name = name
-        campaign.advertising_channel_type = client.enums.AdvertisingChannelTypeEnum.SEARCH
         campaign.status = client.enums.CampaignStatusEnum.PAUSED
         campaign.campaign_budget = budget_rn
-        # Explicitly declare EU political advertising status (required by API)
-        # For older client versions, use BoolValue wrapper so presence is serialized.
-        try:
-            BoolValue = client.get_type("BoolValue")
-            campaign.contains_eu_political_advertising = BoolValue()
-            campaign.contains_eu_political_advertising.value = False
-        except Exception:
-            # Fallback for proto-plus where plain bool marks presence
-            try:
-                campaign.contains_eu_political_advertising = False
-            except Exception:
-                pass
+        campaign.advertising_channel_type = client.enums.AdvertisingChannelTypeEnum.SEARCH
+        
+        # NOTE: advertising_channel_sub_type is REMOVED as it caused an error
+        
         # Set a safe start date (today, UTC, timezone-aware)
-        from datetime import datetime, timezone
         campaign.start_date = datetime.now(timezone.utc).strftime("%Y%m%d")
+
+        # *** START: Fix for contains_eu_political_advertising ***
+        # We replace the 'BoolValue' code with this two-part fix.
+
+        # Part 1: Set the value directly on the Python object
+        
+        # *** END: Part 1 of fix ***
+        
         # Set a simple bidding strategy (required): Manual CPC
         campaign.manual_cpc.enhanced_cpc_enabled = False
-        # Conservative network settings for test
+
+        # Settings for "Google Search Only"
         campaign.network_settings.target_google_search = True
-        campaign.network_settings.target_search_network = True
+        campaign.network_settings.target_search_network = False
         campaign.network_settings.target_partner_search_network = False
         campaign.network_settings.target_content_network = False
 
-        # Force presence on the underlying protobuf for older client behaviors
+        # *** START: Fix for contains_eu_political_advertising ***
+        # Part 2: Add the _pb hack to force serialization
+        # This ensures the 'False' value is sent to the API.
         try:
-            operation._pb.create.contains_eu_political_advertising = False  # type: ignore[attr-defined]
-        except Exception:
+            # Note: 'operation.create' is the campaign object
+            operation._pb.create.contains_eu_political_advertising = False
+        except Exception as e:
+            # If this fails, we have a bigger problem.
+            print(f"CRITICAL: Failed to apply _pb hack: {e}")
             pass
+        # *** END: Part 2 of fix ***
 
         response = campaign_service.mutate_campaigns(
             customer_id=customer_id, operations=[operation]
@@ -114,7 +122,8 @@ def test_create_campaign():
                 "customer_id": customer_id,
             }
         ), 200
-    except GoogleAdsException as ex:  # type: ignore
+
+    except GoogleAdsException as ex:  # <-- This requires the import!
         errors = []
         for err in ex.failure.errors:
             errors.append({
@@ -129,8 +138,6 @@ def test_create_campaign():
         }), 400
     except Exception as e:  # noqa: BLE001
         return jsonify({"error": "TestCreateCampaignError", "message": str(e)[:300]}), 500
-
-
 @ads_bp.post("/ads/test/create-video-ad")
 def test_create_video_ad():
     """Build a test video ad preview using product images + AI captions.

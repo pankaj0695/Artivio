@@ -48,9 +48,11 @@ def create_app() -> Flask:
     from .routes.content import content_bp
     from .routes.pricing import pricing_bp
     from .routes.ads_routes import ads_bp
+    from .routes.meta_ads_routes import ads_bp1
 
     app.register_blueprint(health_bp)  # /health (no /api prefix)
     app.register_blueprint(ads_bp)
+    app.register_blueprint(ads_bp1)
     app.register_blueprint(images_bp, url_prefix="/api/images")
     app.register_blueprint(videos_bp, url_prefix="/api/videos")
     app.register_blueprint(content_bp, url_prefix="/api/content")
