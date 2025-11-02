@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Input } from "@/components/ui/input";
 import {
@@ -10,15 +10,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { getProducts } from "@/lib/firestore";
+import { getProducts, getArtisanPublic } from "@/lib/firestore";
 import { Search } from "lucide-react";
 import { useCartStore } from "@/lib/store";
 import { toast } from "sonner";
-import { getArtisanPublic } from "@/lib/firestore";
-import { useEffect } from "react";
 import { useStaticTranslation } from "@/lib/use-static-translation";
 import { useLanguage } from "@/context/LanguageContext";
 import { ProductCard } from "@/components/products/product-card";
+
+function isValidImageSrc(src) {
+  return typeof src === "string" && (src.startsWith("/") || src.startsWith("http"));
+}
 
 const categories = [
   { value: "all", label: "All Categories" },
@@ -54,6 +56,7 @@ export default function ProductsPage() {
         status: "active",
       }),
   });
+
   useEffect(() => {
     if (!productsData?.products) return;
 
@@ -64,7 +67,9 @@ export default function ProductsPage() {
           const artisanProfile = await getArtisanPublic(product.artisanId);
           map[product.artisanId] = {
             name: artisanProfile?.displayName || "Unknown Artisan",
-            avatar: artisanProfile?.avatar || "/default-avatar.png",
+            avatar: isValidImageSrc(artisanProfile?.avatar)
+              ? artisanProfile.avatar
+              : "/default-avatar.png",
           };
         }
       }
@@ -113,9 +118,8 @@ export default function ProductsPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-      {/* Container for all three sections */}
       <div className="flex justify-center gap-8">
-        {/* Left Sidebar Filters */}
+        {/* Left Sidebar */}
         <aside className="lg:w-64 flex-shrink-0">
           <div className="sticky top-24 space-y-6 bg-white p-6 rounded-2xl shadow-sm border">
             {/* Search */}
@@ -173,12 +177,8 @@ export default function ProductsPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">{t("products.typeAll")}</SelectItem>
-                  <SelectItem value="product">
-                    {t("products.typeProduct")}
-                  </SelectItem>
-                  <SelectItem value="service">
-                    {t("products.typeService")}
-                  </SelectItem>
+                  <SelectItem value="product">{t("products.typeProduct")}</SelectItem>
+                  <SelectItem value="service">{t("products.typeService")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -193,21 +193,16 @@ export default function ProductsPage() {
                   <SelectValue placeholder="Sort by" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="newest">
-                    {t("products.sortNewest")}
-                  </SelectItem>
-                  <SelectItem value="price-low">
-                    {t("products.sortPriceLow")}
-                  </SelectItem>
-                  <SelectItem value="price-high">
-                    {t("products.sortPriceHigh")}
-                  </SelectItem>
+                  <SelectItem value="newest">{t("products.sortNewest")}</SelectItem>
+                  <SelectItem value="price-low">{t("products.sortPriceLow")}</SelectItem>
+                  <SelectItem value="price-high">{t("products.sortPriceHigh")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
         </aside>
 
+        {/* Products Section */}
         <div className="flex-1 w-full flex justify-center">
           {isLoading ? (
             <div className="flex flex-wrap justify-center gap-6">
@@ -216,22 +211,38 @@ export default function ProductsPage() {
                 .map((_, i) => (
                   <div
                     key={i}
-                    className="bg-gray-200 animate-pulse rounded-xl h-52 w-[32rem]" // increased height and width
+                    className="bg-gray-200 animate-pulse rounded-xl h-52 w-[32rem]"
                   />
                 ))}
             </div>
           ) : (
             <div className="flex flex-col items-center gap-6 w-full max-w-[32rem]">
-              {" "}
-              {/* increased max width */}
               {filteredAndSortedProducts.map((product) => {
                 const isInCart = items.some((item) => item.id === product.id);
+
+                const safeProduct = {
+                  ...product,
+                  images: Array.isArray(product.images)
+                    ? product.images.map((img) =>
+                        isValidImageSrc(img) ? img : "/placeholder.png"
+                      )
+                    : ["/placeholder.png"],
+                };
+
+                const hasNFT = Boolean(safeProduct.artisanWallet);
+
                 return (
-                  <ProductCard
-                    key={product.id}
-                    product={product}
-                    artisanInfo={artisansMap[product.artisanId]}
-                  />
+                  <div key={safeProduct.id} className="relative w-full">
+                    {hasNFT && (
+                      <span className="absolute top-2 right-3 bg-green-100 text-green-700 text-xs font-semibold px-3 py-1 rounded-full shadow-sm border border-green-200">
+                        🪙 Authorized & Owned by Artisan
+                      </span>
+                    )}
+                    <ProductCard
+                      product={safeProduct}
+                      artisanInfo={artisansMap[safeProduct.artisanId]}
+                    />
+                  </div>
                 );
               })}
             </div>
@@ -245,24 +256,19 @@ export default function ProductsPage() {
               {t("products.latestNews")}
             </h2>
             <div className="space-y-3">
-              <div className="p-3 bg-gray-50 rounded-lg border border-gray-200 shadow-sm">
-                <p className="text-sm font-medium text-gray-900">
-                  {t("products.news1")}
-                </p>
-                <span className="text-xs text-gray-500">{t("products.news1Date")}</span>
-              </div>
-              <div className="p-3 bg-gray-50 rounded-lg border border-gray-200 shadow-sm">
-                <p className="text-sm font-medium text-gray-900">
-                  {t("products.news2")}
-                </p>
-                <span className="text-xs text-gray-500">{t("products.news2Date")}</span>
-              </div>
-              <div className="p-3 bg-gray-50 rounded-lg border border-gray-200 shadow-sm">
-                <p className="text-sm font-medium text-gray-900">
-                  {t("products.news3")}
-                </p>
-                <span className="text-xs text-gray-500">{t("products.news3Date")}</span>
-              </div>
+              {[1, 2, 3].map((n) => (
+                <div
+                  key={n}
+                  className="p-3 bg-gray-50 rounded-lg border border-gray-200 shadow-sm"
+                >
+                  <p className="text-sm font-medium text-gray-900">
+                    {t(`products.news${n}`)}
+                  </p>
+                  <span className="text-xs text-gray-500">
+                    {t(`products.news${n}Date`)}
+                  </span>
+                </div>
+              ))}
             </div>
           </div>
         </aside>

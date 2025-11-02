@@ -7,17 +7,24 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { LoadingPage } from "@/components/ui/loading";
+import { LoadingPage } from "@/components/ui/loading"; // ✅ ensure this is a named export: `export const LoadingPage = () => (...)`
 import { useCartStore } from "@/lib/store";
 import { getProduct } from "@/lib/firestore";
-import { Star, Package, Truck } from "lucide-react";
+import {
+  Star,
+  Package,
+  Truck,
+  Shield,
+  CheckCircle,
+  ExternalLink,
+} from "lucide-react";
 import { toast } from "sonner";
 import { labelProductPage } from "@/lib/analytics";
 import { useStaticTranslation } from "@/lib/use-static-translation";
 import { useLanguage } from "@/context/LanguageContext";
 import { useTranslatedContent } from "@/lib/use-translated-content";
+import { BlockchainService } from "@/lib/blockchain";
 
-// Swiper imports
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination } from "swiper/modules";
 import "swiper/css";
@@ -39,14 +46,17 @@ export default function ProductDetailPage() {
     queryFn: () => getProduct(params.id),
   });
 
-  // Compute product reference early so hooks can use it
   const product = data?.product;
-  
-  // Translate product title and description dynamically
-  const { translated: translatedTitle } = useTranslatedContent(product?.title || "", language);
-  const { translated: translatedDesc } = useTranslatedContent(product?.description || "", language);
 
-  // Update analytics label and document title when product is ready
+  const { translated: translatedTitle } = useTranslatedContent(
+    product?.title || "",
+    language
+  );
+  const { translated: translatedDesc } = useTranslatedContent(
+    product?.description || "",
+    language
+  );
+
   useEffect(() => {
     if (!product) return;
     try {
@@ -59,19 +69,27 @@ export default function ProductDetailPage() {
     }
   }, [product?.id, product?.title]);
 
-  // After hooks are declared, render based on loading/error states
   if (isLoading) return <LoadingPage />;
   if (error || !product) return <div>{t("productDetail.notFound")}</div>;
+
   const isInCart = items.some((item) => item.id === product.id);
   const isService = (product.type || "product") === "service";
+  const isNFTMinted =
+    !isService && product.nftTokenId && product.artisanWallet;
 
   const handleToggleCart = () => {
     if (isInCart) {
       removeItem(product.id);
-      toast.error(`${translatedTitle || product.title} ${t("productDetail.removedFromCart")}`);
+      toast.error(
+        `${translatedTitle || product.title} ${t(
+          "productDetail.removedFromCart"
+        )}`
+      );
     } else {
       addItem(product);
-      toast.success(`${translatedTitle || product.title} ${t("productDetail.addedToCart")}`);
+      toast.success(
+        `${translatedTitle || product.title} ${t("productDetail.addedToCart")}`
+      );
     }
   };
 
@@ -81,7 +99,6 @@ export default function ProductDetailPage() {
     );
   };
 
-  // Build slides: images + optional video
   const slides = [];
   if (product.images?.length) {
     slides.push(...product.images.map((img) => ({ type: "image", src: img })));
@@ -129,9 +146,19 @@ export default function ProductDetailPage() {
         {/* Product Info */}
         <div className="space-y-6">
           <div>
-            <Badge className="mb-4 capitalize">
-              {isService ? t("productDetail.appointment") : product.category || t("common.products")}
-            </Badge>
+            <div className="flex items-center gap-2 mb-4">
+              <Badge className="capitalize">
+                {isService
+                  ? t("productDetail.appointment")
+                  : product.category || t("common.products")}
+              </Badge>
+              {isNFTMinted && (
+                <Badge className="bg-gradient-to-r from-blue-600 to-purple-600 text-white border-0">
+                  <Shield className="h-3 w-3 mr-1" />
+                  {t("Digitally Verified")}
+                </Badge>
+              )}
+            </div>
             <h1 className="text-4xl font-bold text-gray-900 mb-2">
               {translatedTitle || product.title}
             </h1>
@@ -151,6 +178,88 @@ export default function ProductDetailPage() {
               )}
             </div>
           </div>
+
+          {/* NFT Certificate Card */}
+          {isNFTMinted && (
+            <Card className="rounded-2xl border-2 border-blue-100 bg-gradient-to-br from-blue-50 to-purple-50">
+              <CardContent className="p-6">
+                <div className="flex items-start gap-4">
+                  <div className="p-3 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl">
+                    <Shield className="h-6 w-6 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <h3 className="font-semibold text-lg">
+                        {t("Blockchain Certificate of Authenticity")}
+                      </h3>
+                      <CheckCircle className="h-5 w-5 text-green-600" />
+                    </div>
+                    <p className="text-sm text-gray-600 mb-3">
+                      {t(
+                        "This product is verified on the blockchain, ensuring its authenticity and origin."
+                      )}
+                    </p>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-600">{t("Token ID")}:</span>
+                        <span className="font-mono text-xs bg-white px-2 py-1 rounded">
+                          {product.nftTokenId}
+                        </span>
+                      </div>
+                      {product.sku && (
+                        <div className="flex items-center justify-between">
+                          <span className="text-gray-600">{t("SKU")}:</span>
+                          <span className="font-mono text-xs bg-white px-2 py-1 rounded">
+                            {product.sku}
+                          </span>
+                        </div>
+                      )}
+                      {product.nftMintedAt && (
+                        <div className="flex items-center justify-between">
+                          <span className="text-gray-600">
+                            {t("Certified On")}:
+                          </span>
+                          <span className="text-xs">
+                            {new Date(
+                              product.nftMintedAt
+                            ).toLocaleDateString()}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="mt-4 flex gap-2">
+                      {product.nftTxHash && (
+                        <a
+                          href={BlockchainService.getPolygonScanUrl(
+                            product.nftTxHash
+                          )}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center text-xs text-blue-600 hover:text-blue-800 font-medium"
+                        >
+                          {t("View on Blockchain")}
+                          <ExternalLink className="h-3 w-3 ml-1" />
+                        </a>
+                      )}
+                      {product.nftIpfsHash && (
+                        <a
+                          href={BlockchainService.getIPFSUrl(
+                            product.nftIpfsHash.replace("ipfs://", "")
+                          )}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center text-xs text-purple-600 hover:text-purple-800 font-medium"
+                        >
+                          {t("View Metadata")}
+                          <ExternalLink className="h-3 w-3 ml-1" />
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           <div className="prose max-w-none">
             <p className="text-gray-700 leading-relaxed">
@@ -184,7 +293,9 @@ export default function ProductDetailPage() {
                 className="w-full rounded-full text-lg py-6 bg-black text-white hover:bg-black/90 active:bg-black/80 active:scale-[.99] focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black transition-colors disabled:opacity-60 disabled:pointer-events-none"
                 disabled={product.stock === 0 && !isInCart}
               >
-                {isInCart ? t("productDetail.removeFromCart") : t("productDetail.addToCart")}
+                {isInCart
+                  ? t("productDetail.removeFromCart")
+                  : t("productDetail.addToCart")}
               </Button>
             )}
 
@@ -192,15 +303,23 @@ export default function ProductDetailPage() {
               <Card className="rounded-2xl">
                 <CardContent className="p-4 text-center">
                   <Package className="h-6 w-6 mx-auto mb-2 text-primary" />
-                  <p className="text-sm font-medium">{t("productDetail.handcrafted")}</p>
-                  <p className="text-xs text-gray-600">{t("productDetail.madeToOrder")}</p>
+                  <p className="text-sm font-medium">
+                    {t("productDetail.handcrafted")}
+                  </p>
+                  <p className="text-xs text-gray-600">
+                    {t("productDetail.madeToOrder")}
+                  </p>
                 </CardContent>
               </Card>
               <Card className="rounded-2xl">
                 <CardContent className="p-4 text-center">
                   <Truck className="h-6 w-6 mx-auto mb-2 text-primary" />
-                  <p className="text-sm font-medium">{t("productDetail.freeShipping")}</p>
-                  <p className="text-xs text-gray-600">{t("productDetail.ordersOver")}</p>
+                  <p className="text-sm font-medium">
+                    {t("productDetail.freeShipping")}
+                  </p>
+                  <p className="text-xs text-gray-600">
+                    {t("productDetail.ordersOver")}
+                  </p>
                 </CardContent>
               </Card>
             </div>
@@ -209,7 +328,9 @@ export default function ProductDetailPage() {
           {/* Artisan Info */}
           <Card className="rounded-2xl">
             <CardContent className="p-6">
-              <h3 className="font-semibold text-lg mb-2">{t("productDetail.meetTheArtisan")}</h3>
+              <h3 className="font-semibold text-lg mb-2">
+                {t("productDetail.meetTheArtisan")}
+              </h3>
               <div className="flex items-center space-x-3">
                 <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center text-white font-semibold">
                   A

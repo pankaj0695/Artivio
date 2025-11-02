@@ -25,6 +25,7 @@ import { useRouter } from "next/navigation";
 import { Film, UploadCloud } from "lucide-react";
 import { BlockchainService } from "@/lib/blockchain";
 import { useStaticTranslation } from "@/lib/use-static-translation";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const categories = [
   "pottery",
@@ -48,6 +49,7 @@ export function ProductForm({ product, isEdit = false }) {
   const [videoUploading, setVideoUploading] = useState(false);
   const [nftMinting, setNftMinting] = useState(false);
   const [nftStatus, setNftStatus] = useState(null);
+  const [enableMinting, setEnableMinting] = useState(false);
 
   const {
     register,
@@ -68,6 +70,7 @@ export function ProductForm({ product, isEdit = false }) {
       videoUrl: product?.videoUrl || "",
       status: product?.status || "active",
       bookingUrl: product?.bookingUrl || "",
+      artisanWallet: product?.artisanWallet || "",
     },
   });
 
@@ -284,13 +287,13 @@ export function ProductForm({ product, isEdit = false }) {
     }
   };
 
+  // Update the onSubmit function
   const onSubmit = async (data) => {
     setLoading(true);
     const productData = {
       ...data,
       artisanId: user.uid,
       price: parseFloat(data.price),
-      // stock only relevant for physical products
       stock: listingType === "service" ? 0 : parseInt(data.stock),
       type: listingType,
       tags: data.tags
@@ -311,45 +314,52 @@ export function ProductForm({ product, isEdit = false }) {
         productData.id = productRef.id;
       }
 
-      const sku = parseInt(`${Date.now()}${Math.floor(Math.random() * 1000)}`);
+      // Only mint NFT if enabled
+      if (enableMinting && listingType === "product") {
+        const sku = parseInt(`${Date.now()}${Math.floor(Math.random() * 1000)}`);
 
-      setNftMinting(true);
-      setNftStatus("Minting blockchain certificate...");
+        setNftMinting(true);
+        setNftStatus("Minting blockchain certificate...");
 
-      const nftResult = await BlockchainService.mintCoA({
-        ...productData,
-        sku: sku,
-        artisanWallet: data.artisanWallet,
-      });
-
-      if (nftResult.success) {
-        // Step 4: Update product with NFT data
-        // await updateProductWithNFT(productRef.id, nftResult);
-
-        setNftStatus({
-          type: "success",
-          message: t("productForm.blockchainCertificateCreated"),
-          tokenId: nftResult.tokenId,
-          txHash: nftResult.txHash,
+        const nftResult = await BlockchainService.mintCoA({
+          ...productData,
+          sku: sku,
+          artisanWallet: data.artisanWallet,
         });
 
-        // Redirect after a brief delay to show success message
-        setTimeout(() => {
-          router.push("/artisan/products");
-        }, 3000);
+        if (nftResult.success) {
+          // Update product with all NFT-related data
+          await updateProduct(productRef.id, {
+            artisanWallet: data.artisanWallet,
+            nftTokenId: nftResult.tokenId,
+            nftTxHash: nftResult.txHash,
+            nftIpfsHash: nftResult.ipfsHash,
+            nftMintedAt: new Date().toISOString(),
+            sku: sku,
+          });
+
+          setNftStatus({
+            type: "success",
+            message: t("productForm.blockchainCertificateCreated"),
+            tokenId: nftResult.tokenId,
+            txHash: nftResult.txHash,
+          });
+
+          setTimeout(() => {
+            router.push("/artisan/products");
+          }, 3000);
+        } else {
+          setNftStatus({
+            type: "error",
+            message: t("productForm.blockchainCertificateFailed") + ": " + nftResult.error,
+            canRetry: true,
+            productId: productRef.id,
+          });
+        }
       } else {
-        // NFT minting failed, but product was created
-        await updateProductNFTError(productRef.id, nftResult.error);
-
-        setNftStatus({
-          type: "error",
-          message: t("productForm.blockchainCertificateFailed") + ": " + nftResult.error,
-          canRetry: true,
-          productId: productRef.id,
-        });
+        // If minting is not enabled, redirect immediately
+        router.push("/artisan/products");
       }
-
-      router.push("/artisan/products");
     } catch (error) {
       console.error("Error saving product:", error);
       setNftStatus({
@@ -599,27 +609,44 @@ export function ProductForm({ product, isEdit = false }) {
               </div>
             )}
 
-            {listingType == "product" && (
-              // Add this to your form fields in ProductForm component
-              <div>
-                <Label htmlFor="artisanWallet">{t("productForm.wallet")}</Label>
-                <Input
-                  id="artisanWallet"
-                  {...register("artisanWallet", {
-                    required:
-                      t("productForm.wallet") + " is required for blockchain certificate",
-                    pattern: {
-                      value: /^0x[a-fA-F0-9]{40}$/,
-                      message: "Please enter a valid Ethereum wallet address",
-                    },
-                  })}
-                  placeholder="0x1234567890123456789012345678901234567890"
-                  error={errors.artisanWallet?.message}
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  {t("productForm.walletDescription")}
-                </p>
-              </div>
+            {listingType === "product" && (
+              <>
+                {/* Checkbox to enable blockchain certificate minting */}
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="enableMinting"
+                    checked={enableMinting}
+                    onCheckedChange={setEnableMinting}
+                  />
+                  <Label htmlFor="enableMinting" className="cursor-pointer">
+                    {t("Create blockchain certificate for this product")}
+                  </Label>
+                </div>
+
+                {/* Only show wallet address field if minting is enabled */}
+                {enableMinting && (
+                  <div>
+                    <Label htmlFor="artisanWallet">{t("productForm.wallet")}</Label>
+                    <Input
+                      id="artisanWallet"
+                      {...register("artisanWallet", {
+                        required: enableMinting
+                          ? t("productForm.wallet") + " is required for blockchain certificate"
+                          : false,
+                        pattern: {
+                          value: /^0x[a-fA-F0-9]{40}$/,
+                          message: "Please enter a valid Ethereum wallet address",
+                        },
+                      })}
+                      placeholder="0x1234567890123456789012345678901234567890"
+                      error={errors.artisanWallet?.message}
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      {t("productForm.walletDescription")}
+                    </p>
+                  </div>
+                )}
+              </>
             )}
 
             {listingType === "service" && (
@@ -673,7 +700,7 @@ export function ProductForm({ product, isEdit = false }) {
             </Card>
           )}
 
-          {nftStatus && nftStatus === "object" && (
+          {nftStatus && typeof nftStatus === "object" && (
             <Card
               className={`border-2 ${
                 nftStatus.type === "success"
@@ -731,7 +758,7 @@ export function ProductForm({ product, isEdit = false }) {
           )}
 
           <div className="flex gap-4">
-            <Button type="submit" disabled={loading} className="flex-1">
+            <Button type="submit" disabled={loading || nftMinting} className="flex-1">
               {nftMinting
                 ? t("productForm.creatingCertificate")
                 : loading
@@ -748,6 +775,7 @@ export function ProductForm({ product, isEdit = false }) {
               type="button"
               variant="outline"
               onClick={() => router.back()}
+              disabled={loading || nftMinting}
             >
               {t("productForm.cancel")}
             </Button>

@@ -58,19 +58,26 @@ export default function ArtisanPublicProfilePage() {
     }
   };
 
+  function isValidImageSrc(src) {
+  return typeof src === "string" && (src.startsWith("/") || src.startsWith("http"));
+}
+
+
   return (
     <div className="max-w-6xl mx-auto px-4 py-8 space-y-8">
       {/* Header */}
       <Card className="overflow-hidden">
         <div className="relative h-40 w-full bg-muted">
-          {profile.coverImage && (
+          {isValidImageSrc(profile.coverImage) && (
             <Image src={profile.coverImage} alt="cover" fill className="object-cover" />
           )}
         </div>
         <CardContent className="p-4 sm:p-6">
           <div className="flex items-center gap-4">
             <div className="relative w-20 h-20 -mt-12 rounded-full border-4 border-white overflow-hidden">
+            {isValidImageSrc(profile.avatar) && 
               <Image src={profile.avatar || "/default-avatar.png"} alt="avatar" fill className="object-cover" />
+            }
             </div>
             <div className="flex-1">
               <h1 className="text-2xl font-bold">{profile.displayName}</h1>
@@ -120,7 +127,8 @@ export default function ArtisanPublicProfilePage() {
               <Card key={p.id} className="p-3">
                 {p.images?.[0] && (
                   <div className="relative h-36 w-full mb-2">
-                    <Image src={p.images[0]} alt={p.title} fill className="rounded object-cover" />
+                  {isValidImageSrc(p.images[0]) &&
+                    <Image src={p.images[0]} alt={p.title} fill className="rounded object-cover" />}
                   </div>
                 )}
                 <div className="font-medium">{p.title}</div>
@@ -145,7 +153,8 @@ export default function ArtisanPublicProfilePage() {
               <Card key={s.id} className="p-3">
                 {s.images?.[0] && (
                   <div className="relative h-36 w-full mb-2">
-                    <Image src={s.images[0]} alt={s.title} fill className="rounded object-cover" />
+                  {isValidImageSrc(s.images[0]) &&
+                    <Image src={s.images[0]} alt={s.title} fill className="rounded object-cover" />}
                   </div>
                 )}
                 <div className="font-medium">{s.title}</div>
@@ -168,7 +177,8 @@ export default function ArtisanPublicProfilePage() {
           <div className="grid sm:grid-cols-3 gap-3">
             {portfolio.map((item) => (
               <div key={item.id} className="relative h-40 w-full overflow-hidden rounded-lg">
-                <Image src={item.media?.[0]?.url || "/placeholder.png"} alt={item.title || ""} fill className="object-cover" />
+              {isValidImageSrc(item.media?.[0]?.url) &&
+                <Image src={item.media?.[0]?.url || "/placeholder.png"} alt={item.title || ""} fill className="object-cover" />}
               </div>
             ))}
           </div>

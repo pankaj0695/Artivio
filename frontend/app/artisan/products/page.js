@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { RoleGuard } from "@/components/auth/role-guard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { getProducts, getAllArtisanProducts } from "@/lib/firestore";
 import { useAuth } from "@/hooks/use-auth";
@@ -14,6 +14,7 @@ import Image from "next/image";
 import { Plus, Search, Edit, Eye } from "lucide-react";
 import { ViewsBadge } from "@/components/artisan/views-badge";
 import { useStaticTranslation } from "@/lib/use-static-translation";
+import { TokenMintModal } from "@/components/products/TokenMintModal";
 
 function ProductsContent() {
   const { user } = useAuth();
@@ -33,18 +34,30 @@ function ProductsContent() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+
       <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-4xl font-bold text-gray-900">{t("myProducts.title")}</h1>
-          <p className="text-gray-600 mt-2">{t("myProducts.description")}</p>
-        </div>
-        <Link href="/artisan/products/new">
-          <Button className="rounded-full flex items-center justify-center gap-2">
-            <Plus className="h-4 w-4" />
-            {t("myProducts.addProduct")}
-          </Button>
-        </Link>
-      </div>
+  <div>
+    <h1 className="text-4xl font-bold text-gray-900">
+      {t("myProducts.title")}
+    </h1>
+    <p className="text-gray-600 mt-2">{t("myProducts.description")}</p>
+  </div>
+  <div className="flex items-center gap-3">
+    <Link href="/artisan/nft-dashboard">
+      <Button variant="outline" className="rounded-full">
+        View NFT Dashboard
+      </Button>
+    </Link>
+
+    <Link href="/artisan/products/new">
+      <Button className="rounded-full flex items-center justify-center gap-2">
+        <Plus className="h-4 w-4" />
+        {t("myProducts.addProduct")}
+      </Button>
+    </Link>
+  </div>
+</div>
+
 
       <div className="mb-6">
         <div className="relative max-w-md">
@@ -89,7 +102,9 @@ function ProductsContent() {
                 <span>{t("myProducts.addProduct")}</span>
               </Button>
             </Link>
+
           </div>
+          
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -121,7 +136,9 @@ function ProductsContent() {
                 {(product.type || "product") !== "service" &&
                   product.stock < 10 && (
                     <div className="absolute top-3 right-3">
-                      <Badge className="bg-red-500">{t("myProducts.lowStock")}</Badge>
+                      <Badge className="bg-red-500">
+                        {t("myProducts.lowStock")}
+                      </Badge>
                     </div>
                   )}
               </div>
@@ -173,6 +190,26 @@ function ProductsContent() {
                   </Link>
                 </div>
               </CardContent>
+              
+              {/* Only show NFT section for products (not services) */}
+              {(product.type || "product") === "product" && (
+                <CardFooter className="flex justify-between pt-0 px-4 pb-4">
+                  {!product.artisanWallet ? (
+                    <TokenMintModal product={product} />
+                  ) : (
+                    <div className="w-full">
+                      <Badge className="text-sm p-2 w-full justify-center">
+                        ✓ NFT Certificate Minted
+                      </Badge>
+                      {product.nftTokenId && (
+                        <p className="text-xs text-gray-500 text-center mt-1">
+                          Token ID: {product.nftTokenId}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </CardFooter>
+              )}
             </Card>
           ))}
         </div>
